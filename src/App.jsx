@@ -1,20 +1,20 @@
 import './App.css'
 import React from 'react'
-import { BrowserRouter, Switch, Route } from 'react-router-dom'
+import { HashRouter, Switch, Route } from 'react-router-dom'
 import styles from './App.module.css'
 import { Navigation } from './navigation'
-import { Home, Tumour, AllRecords, Reports, NoMatch, Patient,Source } from './pages'
-
+import {
+    Home,
+    Tumour,
+    AllRecords,
+    Reports,
+    NoMatch,
+    Patient,
+    Source,
+} from './pages'
 
 const MyApp = () => (
-    <BrowserRouter basename="/oncology/api/apps/Cancer-Registry/index.html#"
-
-    // This Router will use the browser history.
-    // If older browsers need to be supported,
-    // then the `HashRouter` can be used
-    // For more information, check out the docs:
-    // https://reacttraining.com/react-router/web/guides/quick-start
-    >
+    <HashRouter>
         <div className={styles.container}>
             <div className={styles.left}>
                 <Navigation
@@ -34,7 +34,7 @@ const MyApp = () => (
                         // Home route, will render "Home" component
                         // when "/" is the current url
                         exact
-                        path="/home"
+                        path="/"
                         component={Home}
                     />
 
@@ -42,7 +42,7 @@ const MyApp = () => (
                         // Attributes route, will render "Attributes" component
                         // when "/attributes" is the current url
                         exact
-                        path="/"
+                        path="/patient"
                         component={Patient}
                     />
 
@@ -86,7 +86,7 @@ const MyApp = () => (
                 </Switch>
             </div>
         </div>
-    </BrowserRouter>
+    </HashRouter>
 )
 
 export default MyApp
