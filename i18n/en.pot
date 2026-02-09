@@ -5,50 +5,58 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"POT-Creation-Date: 2021-09-21T12:39:55.149Z\n"
-"PO-Revision-Date: 2021-09-21T12:39:55.149Z\n"
+"POT-Creation-Date: 2026-02-09T11:17:58.280Z\n"
+"PO-Revision-Date: 2026-02-09T11:17:58.281Z\n"
 
 msgid "Home"
-msgstr ""
+msgstr "Home"
 
 msgid "Patient"
-msgstr ""
+msgstr "Patient"
 
 msgid "Tumour"
-msgstr ""
+msgstr "Tumour"
 
 msgid "Source"
-msgstr ""
+msgstr "Source"
 
 msgid "All Records Export"
-msgstr ""
+msgstr "All Records Export"
 
 msgid "Reports"
-msgstr ""
+msgstr "Reports"
 
 msgid "Download Oncology Data"
-msgstr ""
+msgstr "Download Oncology Data"
 
 msgid "Data for Export"
-msgstr ""
+msgstr "Data for Export"
 
 msgid "Home page"
-msgstr ""
+msgstr "Home page"
 
 msgid "Cancer Registry"
-msgstr ""
+msgstr "Cancer Registry"
 
 msgid "in"
-msgstr ""
+msgstr "in"
 
 msgid "Use the left menu to view, filter and export data to"
-msgstr ""
+msgstr "Use the left menu to view, filter and export data to"
 
 msgid "Download Patient Data"
-msgstr ""
+msgstr "Download Patient Data"
 
 msgid "Download Source Data"
-msgstr ""
+msgstr "Download Source Data"
 
 msgid "Download Tumour Data"
+msgstr "Download Tumour Data"
+
+msgctxt "Application title"
+msgid "__MANIFEST_APP_TITLE"
+msgstr "Cancer-Registry"
+
+msgctxt "Application description"
+msgid "__MANIFEST_APP_DESCRIPTION"
 msgstr ""

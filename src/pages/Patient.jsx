@@ -1,10 +1,10 @@
 import { useDataQuery , useAlert} from '@dhis2/app-runtime'
 import { Button, CircularLoader, InputField, Table, TableBody, TableCell, TableCellHead, TableHead, TableRow, TableRowHead } from "@dhis2/ui";
 
-import { AllRecordsHeaderView } from './AllRecordsHeaderView'
+import { AllRecordsHeaderView } from './AllRecordsHeaderView.jsx'
 import React, { useState } from 'react'
 
-import { PaginationControls } from './TumourComponents/PaginationControls'
+import { PaginationControls } from './TumourComponents/PaginationControls.jsx'
 import * as classes from '../App.module.css'
 import i18n from "../locales/index.js";
 import styles from './Form.module.css'

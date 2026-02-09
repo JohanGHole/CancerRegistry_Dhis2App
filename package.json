@@ -10,15 +10,15 @@
     "test": "d2-app-scripts test",
     "deploy": "d2-app-scripts deploy",
     "lint": "d2-style js check && d2-style text check"
-   },
+  },
   "devDependencies": {
-    "@dhis2/cli-app-scripts": "^5.7.0",
+    "@dhis2/cli-app-scripts": "^12.10.4",
     "@dhis2/cli-style": "^7.3.0"
   },
   "dependencies": {
-    "@dhis2/app-runtime": "^2.7.0",
+    "@dhis2/app-runtime": "^3.16.0",
     "@dhis2/prop-types": "^2.0.0",
-    "@dhis2/ui": "^5.0.3",
+    "@dhis2/ui": "^10.12.7",
     "axios": "^0.21.1",
     "bootstrap": "^4.6.0",
     "moment": "^2.29.1",
