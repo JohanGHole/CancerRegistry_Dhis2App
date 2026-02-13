@@ -1,5 +1,6 @@
 # DHIS2 Platform
 node_modules
 .d2
+.vscode
 src/locales
 build
