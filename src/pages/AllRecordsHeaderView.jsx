@@ -4,13 +4,10 @@ import { useDataQuery, useAlert } from '@dhis2/app-runtime'
 import React, { useState, useEffect }  from "react";
 import styles from './Form.module.css'
 import i18n from "../locales/index.js";
+import { useRootOrgUnitContext } from '../context/RootOrgUnitContext'
 
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-
-// Nyamata: R0kfMYExrnk
-// Butaro: OujzhM1lgN5
-// Rwanda: Hjw70Lodtf2
 
 const orgUnitsQuery = {
     results: {
@@ -24,6 +21,8 @@ const orgUnitsQuery = {
 
 export const AllRecordsHeaderView = ({onUpdateFetchInfo, provinces}) => {
   
+  const { rootOrgUnitId, rootOrgUnitName } = useRootOrgUnitContext()
+  
   // Component's states
   const [orgUnitLevel, setOrgUnitLevel] = useState('')
   const [districts, setDistricts] = useState([])
@@ -36,7 +35,7 @@ export const AllRecordsHeaderView = ({onUpdateFetchInfo, provinces}) => {
   const [checkedOrg, setCheckedOrg] = useState(false)
   
   const { data, refetch } = useDataQuery(orgUnitsQuery, {
-    variables: { orgUnitID: 'Hjw70Lodtf2' },
+    variables: { orgUnitID: rootOrgUnitId },
     lazy: true,
   })
   
@@ -50,7 +49,7 @@ export const AllRecordsHeaderView = ({onUpdateFetchInfo, provinces}) => {
     } )
 
     const updateFilterInfoRw = () => {
-        onUpdateFetchInfo(startDate, endDate, "Hjw70Lodtf2", 'DESCENDANTS')
+        onUpdateFetchInfo(startDate, endDate, rootOrgUnitId, 'DESCENDANTS')
     }
 
   const updateFilterInfo = () => {
@@ -121,8 +120,8 @@ export const AllRecordsHeaderView = ({onUpdateFetchInfo, provinces}) => {
 
         <Switch
             checked={checkedOrg}
-            label="Select Rwanda"
-            name="rwandaSelector"
+            label={`Select ${rootOrgUnitName || 'All'}`}
+            name="rootOrgUnitSelector"
             onChange={onChange}
             value="checked"
         />
@@ -134,7 +133,7 @@ export const AllRecordsHeaderView = ({onUpdateFetchInfo, provinces}) => {
                     <TableCellHead>
                       <div className={styles.row}>
                           <select className={styles.cbx} name="provselected">
-                              <option key="Hjw70Lodtf2" value="Hjw70Lodtf2"> Rwanda </option>
+                              <option key={rootOrgUnitId} value={rootOrgUnitId}> {rootOrgUnitName} </option>
                           </select>
                       </div>
                       </TableCellHead>

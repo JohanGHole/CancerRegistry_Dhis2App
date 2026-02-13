@@ -9,33 +9,11 @@ import * as classes from '../App.module.css'
 import i18n from "../locales/index.js";
 import styles from './Form.module.css';
 import { formatTodayDate } from "../app_utils/App_Utils";
-
-
-const eventsQuery = {
-    results: {
-        resource: 'trackedEntityInstances.json',
-        params: ({ page, startDate, endDate, orgUnitID, pageSize, ouMode }) => ({
-            page: page,
-            ou: orgUnitID,
-            ouMode: ouMode,
-            program: 'rx6V962E4XM',
-            fields: ['attributes[attribute,value],enrollments[events[storedBy,event,programStage,dataValues[dataElement,value]]]'],
-            programStartDate:startDate,
-            programEndDate:endDate,
-            totalPages: true,
-            pageSize:pageSize,
-        }),
-    },
-    provinces: {
-        resource: 'organisationUnits',
-        id: 'Hjw70Lodtf2',
-        params:{
-            fields: ['children[name,id]']
-        },
-    },
-}
+import { useRootOrgUnitContext } from '../context/RootOrgUnitContext'
+import { eventsQuery } from '../queries/eventsQuery'
 
 export const AllRecords = () => {
+    const { rootOrgUnitId, rootOrgUnitChildren: provinces } = useRootOrgUnitContext()
     const [forFileDownload, setForFileDownload] = useState(false)
 
     const formatPatientID = (oldID) => {
@@ -465,7 +443,7 @@ trackedEntityInstances.map((tei) => {
         } )
 
     const { loading, error, data, refetch } = useDataQuery(eventsQuery, {
-        variables: { page: 0, startDate: '2021-02-01', endDate: '2021-06-01', orgUnitID: 'OujzhM1lgN5', pageSize: 5, ouMode: 'SELECTED' },
+        variables: { page: 0, startDate: '2021-02-01', endDate: '2021-06-01', orgUnitID: rootOrgUnitId, pageSize: 5, ouMode: 'SELECTED' },
     })
 
     if (error) { return <span>ERROR: {error.message}</span> }
@@ -479,11 +457,9 @@ trackedEntityInstances.map((tei) => {
     }
 
     if (data.results.trackedEntityInstances) {  
-        const message = 'SUCCESS: Successfully retrieved Source events.'
         if (forFileDownload) {
             exportTSVFile(data.results.trackedEntityInstances)
         }
-        show({ message, status: 'success' })
     }
 
     const updateDowloadInfo = (pageSize) =>{
@@ -510,7 +486,7 @@ trackedEntityInstances.map((tei) => {
 
         <div className={classes.tableContainer}>
           <div className='products'>
-            <AllRecordsHeaderView onUpdateFetchInfo={updateFetchInfo} provinces={data.provinces.children}/>
+            <AllRecordsHeaderView onUpdateFetchInfo={updateFetchInfo} provinces={provinces}/>
             
             
             <Table>

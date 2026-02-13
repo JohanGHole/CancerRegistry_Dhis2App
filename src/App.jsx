@@ -3,6 +3,7 @@ import React from 'react'
 import { HashRouter, Switch, Route } from 'react-router-dom'
 import styles from './App.module.css'
 import { Navigation } from './navigation'
+import { RootOrgUnitProvider } from './context/RootOrgUnitContext'
 import {
     Home,
     Tumour,
@@ -14,6 +15,7 @@ import {
 } from './pages'
 
 const MyApp = () => (
+    <RootOrgUnitProvider>
     <HashRouter>
         <div className={styles.container}>
             <div className={styles.left}>
@@ -87,6 +89,7 @@ const MyApp = () => (
             </div>
         </div>
     </HashRouter>
+    </RootOrgUnitProvider>
 )
 
 export default MyApp
