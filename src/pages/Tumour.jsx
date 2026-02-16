@@ -11,10 +11,12 @@ import styles from './Form.module.css'
 
 import { formatTodayDate } from "../app_utils/App_Utils";
 import { useRootOrgUnitContext } from '../context/RootOrgUnitContext'
+import { useMappingContext } from '../mapping/MappingContext'
 import { eventsQuery } from '../queries/eventsQuery'
 
 export const Tumour = () => {
     const { rootOrgUnitId, rootOrgUnitChildren: provinces } = useRootOrgUnitContext()
+    const { mapping } = useMappingContext()
     const [forFileDownload, setForFileDownload] = useState(false)
 
 
@@ -54,10 +56,10 @@ export const Tumour = () => {
             let tumourCounts = 0
             let tumourEvents = []
             tei.attributes.map((item) => {
-                if (item.attribute == 'uWRHiEUPnP7') {
+                if (item.attribute == mapping.attributes.REGNO) {
                     uniqueId = item.value
                 }
-                if(item.attribute=="PTGSZmTk3IQ") {
+                if(item.attribute==mapping.attributes.REGNO_OLD) {
                     aregnoOld=item.value
                     }
             })
@@ -65,7 +67,7 @@ export const Tumour = () => {
             // Getting the number of Tumour  stage events present in the current enrollment
             tei.enrollments.map((enrollment) => {
                 enrollment.events.map((teiEvent) => {
-                    if(teiEvent.programStage=="Y0cWLBEdXzb"){
+                    if(teiEvent.programStage==mapping.programStages.tumour){
                         tumourCounts ++
                         tumourEvents.push(teiEvent)
                     } 
@@ -93,45 +95,45 @@ if(uniqueId=='')
 
                 // Filling the rest of the tumor table fields
                 teiEvent.dataValues.map((dataValue) =>{
-                    if(dataValue.dataElement == "XBZsBO1iIMu") { HIVSTATUS = dataValue.value }
-                    if(dataValue.dataElement == "w3hjoxhRdxX") { DATEHIVTEST = formatCanRegDate(dataValue.value) }
-                    if(dataValue.dataElement == "Lklmhjoa2VZ") { AGE = dataValue.value }
-                    if(dataValue.dataElement == "YjyatbcXrAB") { ADDR = dataValue.value }
-                    if(dataValue.dataElement == "R7C6qavR1By") { SECTOR = dataValue.value }
-                    if(dataValue.dataElement == "JoiKTef007f") { CELL = dataValue.value }
-                    if(dataValue.dataElement == "hNjuN29oWEo") { VILLAGE = dataValue.value }
-                    if(dataValue.dataElement == "qiPi86HJH9D") { INCID = formatCanRegDate(dataValue.value) }
-                    if(dataValue.dataElement == "b4nlCulDaNv") { BAS = dataValue.value }
-                    if(dataValue.dataElement == "mIGq36ORtj5") { TOP = dataValue.value }
-                    if(dataValue.dataElement == "R3V4FZ7bm1Z") { BEH = dataValue.value }
-                    if(dataValue.dataElement == "pUcbnDZTKWO") { LATERALITY = dataValue.value }
-                    if(dataValue.dataElement == "g4InB94akRh") { MOR = dataValue.value }
-                    if(dataValue.dataElement == "MiCTO3OgRB8") { GRDE = dataValue.value }
-                    if(dataValue.dataElement == "lsyoWxLKpcg") {  dataValue.value == "Unkwown"? STAGE = "XX" : STAGE = dataValue.value  }
-                    if(dataValue.dataElement == "jufaPpTt33C") { T = dataValue.value }
-                    if(dataValue.dataElement == "crCh4AWyhEQ") { N = dataValue.value }
-                    if(dataValue.dataElement == "YU85aZgUvpI") { M = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.HIVSTATUS) { HIVSTATUS = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.DATEHIVTEST) { DATEHIVTEST = formatCanRegDate(dataValue.value) }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.AGE) { AGE = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.ADDR) { ADDR = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.SECTOR) { SECTOR = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.CELL) { CELL = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.VILLAGE) { VILLAGE = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.INCID) { INCID = formatCanRegDate(dataValue.value) }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.BAS) { BAS = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.TOP) { TOP = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.BEH) { BEH = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.LATERALITY) { LATERALITY = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.MOR) { MOR = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.GRDE) { GRDE = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.STAGE) {  dataValue.value == "Unkwown"? STAGE = "XX" : STAGE = dataValue.value  }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.T) { T = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.N) { N = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.M) { M = dataValue.value }
                     TUMOURUPDATEDBY = teiEvent.storedBy?teiEvent.storedBy:"";
-                    if(dataValue.dataElement == "QDYFCDo0kLm") { INITIALT = dataValue.value }
-                    if(dataValue.dataElement == "EJi6tdw5T1v") { INTENTT = dataValue.value }
-                    if(dataValue.dataElement == "lb1iN94cSNn") { SGRY = dataValue.value }
-                    if(dataValue.dataElement == "NzUoPBTcUme") { formatCanRegDate(DATES = dataValue.value) }
-                    if(dataValue.dataElement == "tmy8Js2OerA") { CHEMO = dataValue.value }
-                    if(dataValue.dataElement == "dqLzVzpPBQk") { STARTC = formatCanRegDate(dataValue.value) }
-                    if(dataValue.dataElement == "qKApg9EbBvP") { ENDCHEMO = formatCanRegDate(dataValue.value) }
-                    if(dataValue.dataElement == "qhTmdhweTY6") { IMMUNO = dataValue.value }
-                    if(dataValue.dataElement == "UH0QjAVVpBw") { STARTI = formatCanRegDate(dataValue.value) }
-                    if(dataValue.dataElement == "Os8vbHJ3qoc") { ENDIMMUNO = formatCanRegDate(dataValue.value) }
-                    if(dataValue.dataElement == "simuoODFRUc") { RADIO = dataValue.value }
-                    if(dataValue.dataElement == "KuewOYQYRq7") { STARTR = formatCanRegDate(dataValue.value) }
-                    if(dataValue.dataElement == "THtdWv46cXH") { ENDRADIO = formatCanRegDate(dataValue.value) }
-                    if(dataValue.dataElement == "QKXwZ57aGdH") { HORMO = dataValue.value }
-                    if(dataValue.dataElement == "pazmxkluuAK") { STARTH = formatCanRegDate(dataValue.value) }
-                    if(dataValue.dataElement == "ZTtTjPPKemm") { ENDHORMO = formatCanRegDate(dataValue.value) }
-                    if(dataValue.dataElement == "N6J5Bp9auN9") { PALLIA = dataValue.value }
-                    if(dataValue.dataElement == "KWsp9YpTp8O") { DATEP = formatCanRegDate(dataValue.value) }
-                    if(dataValue.dataElement == "YYW855k5GgW") { OTHERT = dataValue.value }
-                    if(dataValue.dataElement == "tfeZgkgqJC9") { SPECIFYOT = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.INITIALT) { INITIALT = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.INTENTT) { INTENTT = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.SGRY) { SGRY = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.DATES) { formatCanRegDate(DATES = dataValue.value) }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.CHEMO) { CHEMO = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.STARTC) { STARTC = formatCanRegDate(dataValue.value) }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.ENDCHEMO) { ENDCHEMO = formatCanRegDate(dataValue.value) }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.IMMUNO) { IMMUNO = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.STARTI) { STARTI = formatCanRegDate(dataValue.value) }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.ENDIMMUNO) { ENDIMMUNO = formatCanRegDate(dataValue.value) }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.RADIO) { RADIO = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.STARTR) { STARTR = formatCanRegDate(dataValue.value) }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.ENDRADIO) { ENDRADIO = formatCanRegDate(dataValue.value) }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.HORMO) { HORMO = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.STARTH) { STARTH = formatCanRegDate(dataValue.value) }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.ENDHORMO) { ENDHORMO = formatCanRegDate(dataValue.value) }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.PALLIA) { PALLIA = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.DATEP) { DATEP = formatCanRegDate(dataValue.value) }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.OTHERT) { OTHERT = dataValue.value }
+                    if(dataValue.dataElement == mapping.dataElements.tumour.SPECIFYOT) { SPECIFYOT = dataValue.value }
                     
                 });
                 var tumourTableRow = RECS+"\t"+CHEC+"\t"+HIVSTATUS+"\t"+DATEHIVTEST+"\t"+AGE+"\t"+ADDR+"\t"+SECTOR+"\t"+CELL+"\t"+VILLAGE+"\t"+MPCODE+"\t"+MPSEQ+"\t"+MPTOT+"\t"+INCID+"\t"+BAS+"\t"+TOP+"\t"+BEH+"\t"+
@@ -171,7 +173,7 @@ if(uniqueId=='')
         } )
 
     const { loading, error, data, refetch } = useDataQuery(eventsQuery, {
-        variables: { page: 1, startDate: '2018-01-01', endDate: '2021-07-18', orgUnitID: rootOrgUnitId, pageSize: 5, ouMode: 'SELECTED' },
+        variables: { page: 1, startDate: '2018-01-01', endDate: '2021-07-18', orgUnitID: rootOrgUnitId, pageSize: 5, ouMode: 'SELECTED', program: mapping.program },
     })
 
     if (error) { return <span>ERROR: {error.message}</span> }
@@ -246,17 +248,17 @@ if(uniqueId=='')
                 {data.results.trackedEntities.map((tei) => (
                 tei.enrollments.map((enrollment) => (
                     enrollment.events.map((teiEvent) => (
-                    teiEvent.programStage=="Y0cWLBEdXzb"?
+                    teiEvent.programStage==mapping.programStages.tumour?
                     <TableRow key={teiEvent.event}> 
-                        <TableCell>{teiEvent.dataValues.map(dataValue => dataValue.dataElement=="Lklmhjoa2VZ"?dataValue.value:"")}</TableCell>
-                        <TableCell>{teiEvent.dataValues.map(dataValue => dataValue.dataElement=="YjyatbcXrAB"?dataValue.value:"")}</TableCell>
-                        <TableCell>{teiEvent.dataValues.map(dataValue => dataValue.dataElement=="QsbsNHyRwcu"?dataValue.value:"")}</TableCell>
-                        <TableCell>{teiEvent.dataValues.map(dataValue => dataValue.dataElement=="qiPi86HJH9D"? formatCanRegDate(dataValue.value):"")}</TableCell>
-                        <TableCell>{teiEvent.dataValues.map(dataValue => dataValue.dataElement=="b4nlCulDaNv"?dataValue.value:"")}</TableCell>
-                        <TableCell>{teiEvent.dataValues.map(dataValue => dataValue.dataElement=="mIGq36ORtj5"?dataValue.value:"")}</TableCell>
-                        <TableCell>{teiEvent.dataValues.map(dataValue => dataValue.dataElement=="pUcbnDZTKWO"?dataValue.value:"")}</TableCell>
-                        <TableCell>{teiEvent.dataValues.map(dataValue => dataValue.dataElement=="U6uTS5AuKQi"?formatPatientID(dataValue.value):"")}</TableCell>
-                        <TableCell>{teiEvent.dataValues.map(dataValue => dataValue.dataElement=="U6uTS5AuKQi"?formatPatientID(dataValue.value) + '01':"")}</TableCell>
+                        <TableCell>{teiEvent.dataValues.map(dataValue => dataValue.dataElement==mapping.dataElements.tumour.AGE?dataValue.value:"")}</TableCell>
+                        <TableCell>{teiEvent.dataValues.map(dataValue => dataValue.dataElement==mapping.dataElements.tumour.ADDR?dataValue.value:"")}</TableCell>
+                        <TableCell>{teiEvent.dataValues.map(dataValue => dataValue.dataElement==mapping.dataElements.tumour.MPTOT?dataValue.value:"")}</TableCell>
+                        <TableCell>{teiEvent.dataValues.map(dataValue => dataValue.dataElement==mapping.dataElements.tumour.INCID? formatCanRegDate(dataValue.value):"")}</TableCell>
+                        <TableCell>{teiEvent.dataValues.map(dataValue => dataValue.dataElement==mapping.dataElements.tumour.BAS?dataValue.value:"")}</TableCell>
+                        <TableCell>{teiEvent.dataValues.map(dataValue => dataValue.dataElement==mapping.dataElements.tumour.TOP?dataValue.value:"")}</TableCell>
+                        <TableCell>{teiEvent.dataValues.map(dataValue => dataValue.dataElement==mapping.dataElements.tumour.LATERALITY?dataValue.value:"")}</TableCell>
+                        <TableCell>{teiEvent.dataValues.map(dataValue => dataValue.dataElement==mapping.dataElements.tumour.PATIENTIDTUMOURTABLE?formatPatientID(dataValue.value):"")}</TableCell>
+                        <TableCell>{teiEvent.dataValues.map(dataValue => dataValue.dataElement==mapping.dataElements.tumour.PATIENTIDTUMOURTABLE?formatPatientID(dataValue.value) + '01':"")}</TableCell>
                         </TableRow>
                         : 
                         <TableRow key={teiEvent.event}></TableRow>
