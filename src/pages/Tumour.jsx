@@ -171,16 +171,10 @@ if(uniqueId=='')
         } )
 
     const { loading, error, data, refetch } = useDataQuery(eventsQuery, {
-        variables: { page: 0, startDate: '2018-01-01', endDate: '2021-07-18', orgUnitID: rootOrgUnitId, pageSize: 5, ouMode: 'SELECTED' },
+        variables: { page: 1, startDate: '2018-01-01', endDate: '2021-07-18', orgUnitID: rootOrgUnitId, pageSize: 5, ouMode: 'SELECTED' },
     })
 
-    if (error) {  
-        const message = 'ERROR: ' + error.message
-        show({ message, status: 'error' })
-        return (
-            <> </>
-        )
-    }
+    if (error) { return <span>ERROR: {error.message}</span> }
 
     if (loading) {
         return (
@@ -191,9 +185,9 @@ if(uniqueId=='')
         )
     }
 
-    if (data.results.trackedEntityInstances) {  
+    if (data.results.trackedEntities) {  
         if (forFileDownload) {
-            exportTSVFile(data.results.trackedEntityInstances)
+            exportTSVFile(data.results.trackedEntities)
         }
     }
 
@@ -249,7 +243,7 @@ if(uniqueId=='')
                 </TableRowHead>
             </TableHead>
             <TableBody>
-                {data.results.trackedEntityInstances.map((tei) => (
+                {data.results.trackedEntities.map((tei) => (
                 tei.enrollments.map((enrollment) => (
                     enrollment.events.map((teiEvent) => (
                     teiEvent.programStage=="Y0cWLBEdXzb"?

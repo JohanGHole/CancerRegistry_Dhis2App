@@ -443,7 +443,7 @@ trackedEntityInstances.map((tei) => {
         } )
 
     const { loading, error, data, refetch } = useDataQuery(eventsQuery, {
-        variables: { page: 0, startDate: '2021-02-01', endDate: '2021-06-01', orgUnitID: rootOrgUnitId, pageSize: 5, ouMode: 'SELECTED' },
+        variables: { page: 1, startDate: '2021-02-01', endDate: '2021-06-01', orgUnitID: rootOrgUnitId, pageSize: 5, ouMode: 'SELECTED' },
     })
 
     if (error) { return <span>ERROR: {error.message}</span> }
@@ -456,9 +456,9 @@ trackedEntityInstances.map((tei) => {
         )
     }
 
-    if (data.results.trackedEntityInstances) {  
+    if (data.results.trackedEntities) {  
         if (forFileDownload) {
-            exportTSVFile(data.results.trackedEntityInstances)
+            exportTSVFile(data.results.trackedEntities)
         }
     }
 
@@ -518,7 +518,7 @@ trackedEntityInstances.map((tei) => {
                 </TableRowHead>
             </TableHead>
             <TableBody>
-                {data.results.trackedEntityInstances.map((item) => (
+                {data.results.trackedEntities.map((item) => (
 
             <TableRow>
                                 <TableCell>

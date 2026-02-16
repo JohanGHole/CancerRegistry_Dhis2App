@@ -22,7 +22,7 @@ export const useEventsData = (options = {}) => {
 
     const { loading, error, data, refetch } = useDataQuery(eventsQuery, {
         variables: { 
-            page: 0, 
+            page, 
             startDate, 
             endDate, 
             orgUnitID: rootOrgUnitId || '', 
@@ -36,7 +36,7 @@ export const useEventsData = (options = {}) => {
         if (rootOrgUnitId && !initialFetchDone) {
             setInitialFetchDone(true)
             refetch({ 
-                page: 0, 
+                page, 
                 startDate, 
                 endDate, 
                 orgUnitID: rootOrgUnitId, 

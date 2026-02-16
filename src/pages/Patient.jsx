@@ -332,7 +332,7 @@ export const Patient = () => {
         } )
 
     const { loading, error, data, refetch } = useDataQuery(eventsQuery, {
-        variables: { page: 0, startDate: '2021-02-01', endDate: '2021-06-01', orgUnitID: rootOrgUnitId, pageSize: 5, ouMode: 'SELECTED' },
+        variables: { page: 1, startDate: '2021-02-01', endDate: '2021-06-01', orgUnitID: rootOrgUnitId, pageSize: 5, ouMode: 'SELECTED' },
     })
 
     if (error) { return <span>ERROR: {error.message}</span> }
@@ -345,9 +345,9 @@ export const Patient = () => {
         )
     }
 
-    if (data.results.trackedEntityInstances) {  
+    if (data.results.trackedEntities) {  
         if (forFileDownload) {
-            exportTSVFile(data.results.trackedEntityInstances)
+            exportTSVFile(data.results.trackedEntities)
         }
     }
 
@@ -407,7 +407,7 @@ export const Patient = () => {
                 </TableRowHead>
             </TableHead>
             <TableBody>
-                {data.results.trackedEntityInstances.map((item) => (
+                {data.results.trackedEntities.map((item) => (
             <TableRow>
                                 <TableCell>
                                     {item.attributes.map((attr, index) => (
