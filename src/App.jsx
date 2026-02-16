@@ -4,6 +4,7 @@ import { HashRouter, Switch, Route } from 'react-router-dom'
 import styles from './App.module.css'
 import { Navigation } from './navigation'
 import { RootOrgUnitProvider } from './context/RootOrgUnitContext'
+import { MappingProvider } from './mapping/MappingContext'
 import {
     Home,
     Tumour,
@@ -16,6 +17,7 @@ import {
 
 const MyApp = () => (
     <RootOrgUnitProvider>
+    <MappingProvider>
     <HashRouter>
         <div className={styles.container}>
             <div className={styles.left}>
@@ -89,6 +91,7 @@ const MyApp = () => (
             </div>
         </div>
     </HashRouter>
+    </MappingProvider>
     </RootOrgUnitProvider>
 )
 

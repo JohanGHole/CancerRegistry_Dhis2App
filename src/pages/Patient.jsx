@@ -11,10 +11,12 @@ import styles from './Form.module.css'
 
 import { formatTodayDate } from "../app_utils/App_Utils";
 import { useRootOrgUnitContext } from '../context/RootOrgUnitContext'
+import { useMappingContext } from '../mapping/MappingContext'
 import { eventsQuery } from '../queries/eventsQuery'
 
 export const Patient = () => {
     const { rootOrgUnitId, rootOrgUnitChildren: provinces } = useRootOrgUnitContext()
+    const { mapping } = useMappingContext()
     const [forFileDownload, setForFileDownload] = useState(false)
 
     const formatPatientID = (oldID) => {
@@ -58,13 +60,13 @@ export const Patient = () => {
 //tumor script to store the date of last contact
 
 
-                    if(evts.programStage=="Y0cWLBEdXzb")
+                    if(evts.programStage==mapping.programStages.tumour)
                     {
                         evts.dataValues.map(function(dttumors, i){
                     
                    
 
-                    if(dttumors.dataElement=="qiPi86HJH9D")
+                    if(dttumors.dataElement==mapping.dataElements.tumour.INCID)
                     {
                         //console.log(dtvalues.value);
                         incdates=dttumors.value;
@@ -84,13 +86,13 @@ export const Patient = () => {
 // follow up script
                     mdates="";  
                     
-                    if(evts.programStage=="yj7nAGqKXZw")
+                    if(evts.programStage==mapping.programStages.followUp)
                     {
                        
 
                         evts.dataValues.map(function(dtvalues, i){
 
-                            if(dtvalues.dataElement=="ZBgYdd6OKlc")
+                            if(dtvalues.dataElement==mapping.dataElements.followUp.DLC)
                             {
                                 //console.log(dtvalues.value);
                         mdates=dtvalues.value;
@@ -120,33 +122,33 @@ export const Patient = () => {
                          
 
                     
-                    if(dtvalues.dataElement=="ya7NvvPZ6NE")
+                    if(dtvalues.dataElement==mapping.dataElements.followUp.STATUS)
                     {
                         //console.log(dtvalues.value);
                         stus=dtvalues.value;
                     }
 
-                    if(dtvalues.dataElement=="TFmh28f4Ylz")
+                    if(dtvalues.dataElement==mapping.dataElements.followUp.ONCOPR)
                     {
                         //console.log(dtvalues.value);
                         oncopr=dtvalues.value;
                     }
-                    if(dtvalues.dataElement=="CiP6FnZEAr7")
+                    if(dtvalues.dataElement==mapping.dataElements.followUp.PROGRESSION)
                     {
                         //console.log(dtvalues.value);
                         progress=dtvalues.value;
                     }
-                    if(dtvalues.dataElement=="amOhRQ0vBI7")
+                    if(dtvalues.dataElement==mapping.dataElements.followUp.CAUSEDEATH)
                     {
                         //console.log(dtvalues.value);
                         csdeath=dtvalues.value;
                     }
-                    if(dtvalues.dataElement=="CMycg9jCdw3")
+                    if(dtvalues.dataElement==mapping.dataElements.followUp.PLACED)
                     {
                         //console.log(dtvalues.value);
                         placd=dtvalues.value;
                     }
-                    if(dtvalues.dataElement=="OjKZjjByH9n")
+                    if(dtvalues.dataElement==mapping.dataElements.followUp.REMARKS)
                     {
                         //console.log(dtvalues.value);
                         remark=dtvalues.value;
@@ -170,22 +172,22 @@ export const Patient = () => {
 
             itemp.attributes.map(function(itm, i){
                 
-                if(itm.attribute=="Yp8W95xlxMv")
+                if(itm.attribute==mapping.attributes.NATIONALITY)
                 {
                 natn=itm.value;
                 
                 }
-                if(itm.attribute=="iUkIkQbkxI1")
+                if(itm.attribute==mapping.attributes.PHONE1)
                 {
                 phn=itm.value;
                 
                 }
-                if(itm.attribute=="YfjjdE6XOBu")
+                if(itm.attribute==mapping.attributes.NKNAME)
                 {
                 nkin=itm.value;
                 
                 }
-                if(itm.attribute=="dd98c7o6RjZ")
+                if(itm.attribute==mapping.attributes.PHONEN2)
                 {
                 phn1=itm.value;
                 
@@ -195,16 +197,16 @@ export const Patient = () => {
                 
                 
                 
-                if(itm.attribute=="uWRHiEUPnP7") {
+                if(itm.attribute==mapping.attributes.REGNO) {
                 aregno=itm.value
                 }
-                if(itm.attribute=="PTGSZmTk3IQ") {
+                if(itm.attribute==mapping.attributes.REGNO_OLD) {
                     aregnoOld=itm.value
                     }
                 
                
             
-                if(itm.attribute=="m1At2P4UT9e")
+                if(itm.attribute==mapping.attributes.BIRTHD)
                 {
                 mdates=itm.value;
                 var pyear=mdates.substring(0,4);
@@ -213,32 +215,32 @@ export const Patient = () => {
                 bds=pyear+pmonth+pdate;
             
                 }
-                if(itm.attribute=="l93yUywzP20")
+                if(itm.attribute==mapping.attributes.SEX)
                 {
                 genders=itm.value;
                 
                 }
                 
-                if(itm.attribute=="LbuO5oeODsy")
+                if(itm.attribute==mapping.attributes.IDENTITYCARD)
                 {
                 idnums=itm.value;
                 idnums=idnums;
                 }
-                if(itm.attribute=="mJ3oYSkDyWz")
+                if(itm.attribute==mapping.attributes.FIRSTN)
                 {
                     
                     lname=itm.value;
                 }
             
-                if(itm.attribute=="Uda5alDG8P5")
+                if(itm.attribute==mapping.attributes.SURNAME)
                 {
                     afname=itm.value;
                 }
-                if(itm.attribute=="dd98c7o6RjZ")
+                if(itm.attribute==mapping.attributes.PHONEN2)
                 {
                 emails=itm.value;
                 }
-                if(itm.attribute=="m1At2P4UT9e")
+                if(itm.attribute==mapping.attributes.BIRTHD)
                 {
                 age=itm.value;
                 }
@@ -332,7 +334,7 @@ export const Patient = () => {
         } )
 
     const { loading, error, data, refetch } = useDataQuery(eventsQuery, {
-        variables: { page: 1, startDate: '2021-02-01', endDate: '2021-06-01', orgUnitID: rootOrgUnitId, pageSize: 5, ouMode: 'SELECTED' },
+        variables: { page: 1, startDate: '2021-02-01', endDate: '2021-06-01', orgUnitID: rootOrgUnitId, pageSize: 5, ouMode: 'SELECTED', program: mapping.program },
     })
 
     if (error) { return <span>ERROR: {error.message}</span> }
@@ -412,7 +414,7 @@ export const Patient = () => {
                                 <TableCell>
                                     {item.attributes.map((attr, index) => (
                                         <p>
-                                            {attr.attribute == 'mJ3oYSkDyWz'
+                                            {attr.attribute == mapping.attributes.FIRSTN
                                                 ? attr.value
                                                 : ''}
                                         </p>
@@ -421,7 +423,7 @@ export const Patient = () => {
                                 <TableCell>
                                     {item.attributes.map((attr, index) => (
                                         <p>
-                                            {attr.attribute == 'Uda5alDG8P5'
+                                            {attr.attribute == mapping.attributes.SURNAME
                                                 ? attr.value
                                                 : ''}
                                         </p>
@@ -430,7 +432,7 @@ export const Patient = () => {
                                 <TableCell>
                                     {item.attributes.map((attr, index) => (
                                         <p>
-                                            {attr.attribute == 'dd98c7o6RjZ'
+                                            {attr.attribute == mapping.attributes.PHONEN2
                                                 ? attr.value
                                                 : ''}
                                         </p>
@@ -439,7 +441,7 @@ export const Patient = () => {
                                 <TableCell>
                                     {item.attributes.map((attr, index) => (
                                         <p>
-                                            {attr.attribute == 'm1At2P4UT9e'
+                                            {attr.attribute == mapping.attributes.BIRTHD
                                                 ? attr.value
                                                 : ''}
                                         </p>
@@ -449,7 +451,7 @@ export const Patient = () => {
                                 <TableCell>
                                     {item.attributes.map((attr, index) => (
                                         <p>
-                                            {attr.attribute == 'uWRHiEUPnP7'
+                                            {attr.attribute == mapping.attributes.REGNO
                                                 ? attr.value
                                                 : ''}
                                         </p>
@@ -458,7 +460,7 @@ export const Patient = () => {
                                 <TableCell>
                                     {item.attributes.map((attr, index) => (
                                         <p>
-                                            {attr.attribute == 'dd98c7o6RjZ'
+                                            {attr.attribute == mapping.attributes.PHONEN2
                                                 ? attr.value
                                                 : ''}
                                         </p>
