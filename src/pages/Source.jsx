@@ -9,10 +9,12 @@ import * as classes from '../App.module.css'
 import i18n from "../locales/index.js";
 import styles from './Form.module.css'
 import { useRootOrgUnitContext } from '../context/RootOrgUnitContext'
+import { useMappingContext } from '../mapping/MappingContext'
 import { eventsQuery } from '../queries/eventsQuery'
 
 export const Source = () => {
     const { rootOrgUnitId, rootOrgUnitChildren: provinces } = useRootOrgUnitContext()
+    const { mapping } = useMappingContext()
     const [forFileDownload, setForFileDownload] = useState(false)
 
     const formatPatientID = (oldID) => {
@@ -46,10 +48,10 @@ trackedEntityInstances.map((tei) => {
     let sourceCounts = 0
     let sourceEvents = []
     tei.attributes.map((item) => {
-        if (item.attribute == 'uWRHiEUPnP7') {
+        if (item.attribute == mapping.attributes.REGNO) {
             uniqueId = item.value
         }
-        if(item.attribute=="PTGSZmTk3IQ") {
+        if(item.attribute==mapping.attributes.REGNO_OLD) {
             aregnoOld=item.value
             }
     })
@@ -57,7 +59,7 @@ trackedEntityInstances.map((tei) => {
     // Getting the number of Tumour  stage events present in the current enrollment
     tei.enrollments.map((enrollment) => {
         enrollment.events.map((teiEvent) => {
-            if(teiEvent.programStage=="x0UOKjUKJsO"){
+            if(teiEvent.programStage==mapping.programStages.source){
                 sourceCounts ++
                 sourceEvents.push(teiEvent)
             } 
@@ -82,12 +84,12 @@ trackedEntityInstances.map((tei) => {
         // Filling the rest of the tumor table fields
         teiEvent.dataValues.map((dataValue) =>{
           
-            if(dataValue.dataElement == "WEMqZvXK07I") { 
+            if(dataValue.dataElement == mapping.dataElements.source.SRC) { 
                 tumor_src = dataValue.value }
-            if(dataValue.dataElement == "v9h8LhYlF2k") { source_service = dataValue.value }
-            if(dataValue.dataElement == "gfyCp3UGFBg") { patient_hospital_number = dataValue.value }
-            if(dataValue.dataElement == "g5PfzRwNHVy") { archive_code = dataValue.value }
-            if(dataValue.dataElement=="alUwzyO4ksp")
+            if(dataValue.dataElement == mapping.dataElements.source.SRVC) { source_service = dataValue.value }
+            if(dataValue.dataElement == mapping.dataElements.source.SRCNO) { patient_hospital_number = dataValue.value }
+            if(dataValue.dataElement == mapping.dataElements.source.ARCHVC) { archive_code = dataValue.value }
+            if(dataValue.dataElement==mapping.dataElements.source.ADMNDATE)
             {
                 //console.log(dtvalues.value);
                 var dats=dataValue.value;
@@ -98,7 +100,7 @@ trackedEntityInstances.map((tei) => {
                 date_of_admition=pyear+pmonth+pdate;
 
             }
-            if(dataValue.dataElement=="Ntf8uwbttrj")
+            if(dataValue.dataElement==mapping.dataElements.source.DISDATE)
             {
                 //console.log(dtvalues.value);
                 var dats=dataValue.value;
@@ -113,22 +115,22 @@ trackedEntityInstances.map((tei) => {
 
 
 
-            if(dataValue.dataElement=="cVDk6Qi4aXJ")
+            if(dataValue.dataElement==mapping.dataElements.source.LABO)
             {
                 //console.log(dtvalues.value);
                 source_labo=dataValue.value;
             }
-            if(dataValue.dataElement=="m9zPgjtU6Ck")
+            if(dataValue.dataElement==mapping.dataElements.source.LABNO)
             {
                 //console.log(dtvalues.value);
                 labnun=dataValue.value;
             }
-            if(dataValue.dataElement=="K90OuFCv3c8")
+            if(dataValue.dataElement==mapping.dataElements.source.BIOPSYNO)
             {
                 //console.log(dtvalues.value);
                 Biopsy_Number=dataValue.value;
             }
-            if(dataValue.dataElement=="iUev3OfIqOg")
+            if(dataValue.dataElement==mapping.dataElements.source.RECEPTNDATE)
             {
                 //console.log(dtvalues.value);
                 var dats=dataValue.value;
@@ -139,7 +141,7 @@ trackedEntityInstances.map((tei) => {
                 Date_of_reception=pyear+pmonth+pdate;
 
             }
-            if(dataValue.dataElement=="kNjR9xQM4Wv")
+            if(dataValue.dataElement==mapping.dataElements.source.REPRTDATE)
             {
                 //console.log(dtvalues.value);
                 var dats=dataValue.value;
@@ -151,17 +153,17 @@ trackedEntityInstances.map((tei) => {
 
             }
             
-            if(dataValue.dataElement=="sLGqIdIjg20")
+            if(dataValue.dataElement==mapping.dataElements.source.FROM)
             {
                 //console.log(dtvalues.value);
                 Referred_from=dataValue.value;
             }
-            if(dataValue.dataElement=="yvXtJYq4f5A")
+            if(dataValue.dataElement==mapping.dataElements.source.TO)
             {
                 //console.log(dtvalues.value);
                 Referred_to=dataValue.value;
             }
-            if(dataValue.dataElement=="BD4nYiPXwLN")
+            if(dataValue.dataElement==mapping.dataElements.source.INTENTREF)
             {
                 //console.log(dtvalues.value);
                 Referred_for=dataValue.value;
@@ -294,7 +296,7 @@ trackedEntityInstances.map((tei) => {
                                 <TableCell>
                                     {item.attributes.map((attr, index) => (
                                         <p>
-                                            {attr.attribute == 'mJ3oYSkDyWz'
+                                            {attr.attribute == mapping.attributes.FIRSTN
                                                 ? attr.value
                                                 : ''}
                                         </p>
@@ -303,7 +305,7 @@ trackedEntityInstances.map((tei) => {
                                 <TableCell>
                                     {item.attributes.map((attr, index) => (
                                         <p>
-                                            {attr.attribute == 'Uda5alDG8P5'
+                                            {attr.attribute == mapping.attributes.SURNAME
                                                 ? attr.value
                                                 : ''}
                                         </p>
@@ -312,7 +314,7 @@ trackedEntityInstances.map((tei) => {
                                 <TableCell>
                                     {item.attributes.map((attr, index) => (
                                         <p>
-                                            {attr.attribute == 'dd98c7o6RjZ'
+                                            {attr.attribute == mapping.attributes.PHONEN2
                                                 ? attr.value
                                                 : ''}
                                         </p>
@@ -321,7 +323,7 @@ trackedEntityInstances.map((tei) => {
                                 <TableCell>
                                     {item.attributes.map((attr, index) => (
                                         <p>
-                                            {attr.attribute == 'm1At2P4UT9e'
+                                            {attr.attribute == mapping.attributes.BIRTHD
                                                 ? attr.value
                                                 : ''}
                                         </p>
@@ -331,7 +333,7 @@ trackedEntityInstances.map((tei) => {
                                 <TableCell>
                                     {item.attributes.map((attr, index) => (
                                         <p>
-                                            {attr.attribute == 'uWRHiEUPnP7'
+                                            {attr.attribute == mapping.attributes.REGNO
                                                 ? attr.value
                                                 : ''}
                                         </p>
@@ -340,7 +342,7 @@ trackedEntityInstances.map((tei) => {
                                 <TableCell>
                                     {item.attributes.map((attr, index) => (
                                         <p>
-                                            {attr.attribute == 'dd98c7o6RjZ'
+                                            {attr.attribute == mapping.attributes.PHONEN2
                                                 ? attr.value
                                                 : ''}
                                         </p>
