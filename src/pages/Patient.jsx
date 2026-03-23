@@ -1,479 +1,168 @@
-import { useDataQuery, useAlert } from '@dhis2/app-runtime'
-import { Button, CircularLoader, InputField, Table, TableBody, TableCell, TableCellHead, TableHead, TableRow, TableRowHead } from "@dhis2/ui";
-
-import { AllRecordsHeaderView } from './AllRecordsHeaderView.jsx'
+import { useDataQuery } from '@dhis2/app-runtime'
+import {
+    Button, CircularLoader, Table, TableBody, TableCell,
+    TableCellHead, TableHead, TableRow, TableRowHead,
+} from '@dhis2/ui'
 import React, { useState } from 'react'
 
+import { AllRecordsHeaderView } from './AllRecordsHeaderView.jsx'
 import { PaginationControls } from './TumourComponents/PaginationControls.jsx'
 import * as classes from '../App.module.css'
-import i18n from "../locales/index.js";
+import i18n from '../locales/index.js'
 import styles from './Form.module.css'
 
-import { formatTodayDate } from "../app_utils/App_Utils";
+import {
+    formatCanRegDate,
+    shouldFormatAsDate,
+    getAttr,
+    getAttrValue,
+    extractFollowUpData,
+    downloadTsvFile,
+} from '../app_utils/App_Utils'
 import { useRootOrgUnitContext } from '../context/RootOrgUnitContext'
 import { useMappingContext } from '../mapping/MappingContext'
 import { eventsQuery } from '../queries/eventsQuery'
+const REGNO_LENGTH = 8
+
+const DERIVED_COLUMNS = [
+    { name: 'PATIENTRECORDID',      value: ({ regno }) => regno ? `${regno}01` : '' },
+    { name: 'PATIENTUPDATEDBY',     value: ({ storedBy })  => storedBy },
+]
 
 export const Patient = () => {
-    const { rootOrgUnitId, rootOrgUnitChildren: provinces } = useRootOrgUnitContext()
+    const { rootOrgUnitId } = useRootOrgUnitContext()
     const { mapping } = useMappingContext()
     const [forFileDownload, setForFileDownload] = useState(false)
 
-    const formatPatientID = (oldID) => {
-        var newID
-        if (oldID.length == 9) { 
-            newID = oldID.substring(0, 4) + oldID.substring(5);
-        } else if  (oldID.length == 14) { 
-            newID = oldID.substring(4, 8) + oldID.substring(10);
-        }else {
-            newID = oldID
+    const exportTSVFile = (trackedEntities) => {
+
+        const attrKeys = Object.keys(mapping.attributes || {})
+        const followUpKeys = Object.keys(mapping.dataElements?.followUp || {})
+        const derivedNames = DERIVED_COLUMNS.map((d) => d.name)
+
+        const header = [...attrKeys, ...followUpKeys, ...derivedNames].join('\t')
+
+        const rows = []
+
+        for (const tei of trackedEntities) {
+            const regno = getAttrValue(tei.attributes, mapping.attributes?.REGNO)
+            if (!regno) continue
+            if (REGNO_LENGTH > 0 && regno.length !== REGNO_LENGTH) continue
+
+            const attrValues = attrKeys.map((key) => {
+                const { value, valueType } = getAttr(tei.attributes, mapping.attributes[key])
+                return shouldFormatAsDate(valueType, value) ? formatCanRegDate(value) : value
+            })
+
+            const { followUpValues, storedBy: followUpStoredBy } = extractFollowUpData(
+                tei.enrollments, mapping
+            )
+            const fuValues = followUpKeys.map((key) => {
+                const { value, valueType } = followUpValues[key] || {}
+                return shouldFormatAsDate(valueType, value || '') ? formatCanRegDate(value || '') : (value || '')
+            })
+
+            const patientUpdatedBy = followUpStoredBy || tei.updatedBy?.username || ''
+            const ctx = { regno, storedBy: patientUpdatedBy }
+            const derivedValues = DERIVED_COLUMNS.map((d) => d.value(ctx))
+
+            rows.push([...attrValues, ...fuValues, ...derivedValues].join('\t'))
         }
-        return newID;
-    }
 
-
-    const exportTSVFile = (trackedEntityInstances) =>{
-
-        var contacts = "REGNO"+"\t"+"PERS"+"\t"+"IDENTITYCARD"+"\t"
-        +"SURNAME"+"\t"+"FIRSTN"+"\t"+"SEX"+"\t"+"BIRTHD"+"\t"+"PHONE1"
-        +"\t"+"PHONEN2"+"\t"+"NKNAME"+"\t"+"TNNK"+"\t"+"NATIONALITY"
-        +"\t"+"DLC"+"\t"+"STATUS"+"\t"+"ONCOPR"
-        +"\t"+"IFALIVE"+"\t"+"PROGRESSION"+"\t"+"CAUSEDEATH"+"\t"+"PLACED"+"\t"+"OCD"+"\t"+"OBSOLETEFLAGPATIENTTABLE"+
-        "\t"+"PATIENTRECORDID"+"\t"+"PATIENTUPDATEDBY"+"\t"+"PATIENTUPDATEDATE"+"\t"+"PATIENTRECORDSTATUS"+
-        "\t"+"PATIENTCHECKSTATUS"+"\t"+"REMARKS";
-
-        //variable declaration...
-
-        let aregno=""
-        let aregnoOld = ""
-        // end of global variable declaration...
-
-        trackedEntityInstances.map((itemp) => {
-            aregno = "";
-            aregnoOld = "";
-            let afname="", lname="", emails="", age="", idnums="", genders="", bds="", mdates="",incdates="", phn="", phn1="", nkin="", natn="", stus="", oncopr="", progress="", csdeath="", placd="", datelastcontact="",remark="",inciddates="",datelst="",datelastcontact_temp="",recby="";
-           
-            itemp.enrollments.map((enrolmnt) => {
-                
-                enrolmnt.events.map((evts) => {
-                    //stus="";datelastcontact="";oncopr="";progress="";csdeath="";placd="";remark="";inciddates="";
-//tumor script to store the date of last contact
-
-
-                    if(evts.programStage==mapping.programStages.tumour)
-                    {
-                        evts.dataValues.map(function(dttumors, i){
-                    
-                   
-
-                    if(dttumors.dataElement==mapping.dataElements.tumour.INCID)
-                    {
-                        //console.log(dtvalues.value);
-                        incdates=dttumors.value;
-               // var incyear=incdates.substring(0,4);
-               // var incmonth=incdates.substring(5,7);
-                //var incdate=incdates.substring(8,10);
-               // inciddates=incyear+incmonth+incdate;
-                    }
-                  
-                    
-                    })
-                    }
-
-
-
-
-// follow up script
-                    mdates="";  
-                    
-                    if(evts.programStage==mapping.programStages.followUp)
-                    {
-                       
-
-                        evts.dataValues.map(function(dtvalues, i){
-
-                            if(dtvalues.dataElement==mapping.dataElements.followUp.DLC)
-                            {
-                                //console.log(dtvalues.value);
-                        mdates=dtvalues.value;
-                       
-                        var tempdate=new Date(mdates);
-                        var date_of_last_contact=new Date(datelst);
-                          if(datelst!="")
-                          {
-                        var datediffernces=Math.floor((Math.abs(tempdate-date_of_last_contact))/(1000*60*60*24));
-                        if(datediffernces<0){
-                            datelst=date_of_last_contact;
-                        }
-
-                    }
-                    else
-                    {
-                        datelst= mdates;  
-                    }
-
-                            }
-
-                           
-
-                           
-
-                        
-                         
-
-                    
-                    if(dtvalues.dataElement==mapping.dataElements.followUp.STATUS)
-                    {
-                        //console.log(dtvalues.value);
-                        stus=dtvalues.value;
-                    }
-
-                    if(dtvalues.dataElement==mapping.dataElements.followUp.ONCOPR)
-                    {
-                        //console.log(dtvalues.value);
-                        oncopr=dtvalues.value;
-                    }
-                    if(dtvalues.dataElement==mapping.dataElements.followUp.PROGRESSION)
-                    {
-                        //console.log(dtvalues.value);
-                        progress=dtvalues.value;
-                    }
-                    if(dtvalues.dataElement==mapping.dataElements.followUp.CAUSEDEATH)
-                    {
-                        //console.log(dtvalues.value);
-                        csdeath=dtvalues.value;
-                    }
-                    if(dtvalues.dataElement==mapping.dataElements.followUp.PLACED)
-                    {
-                        //console.log(dtvalues.value);
-                        placd=dtvalues.value;
-                    }
-                    if(dtvalues.dataElement==mapping.dataElements.followUp.REMARKS)
-                    {
-                        //console.log(dtvalues.value);
-                        remark=dtvalues.value;
-                    }
-                    
-                    // recorded by
-                    recby = evts.storedBy?evts.storedBy:"";
-                    
-                    
-                    
-                    
-                    
-                    })
-
-
-
-                    }
-
-                })
-            })
-
-            itemp.attributes.map(function(itm, i){
-                
-                if(itm.attribute==mapping.attributes.NATIONALITY)
-                {
-                natn=itm.value;
-                
-                }
-                if(itm.attribute==mapping.attributes.PHONE1)
-                {
-                phn=itm.value;
-                
-                }
-                if(itm.attribute==mapping.attributes.NKNAME)
-                {
-                nkin=itm.value;
-                
-                }
-                if(itm.attribute==mapping.attributes.PHONEN2)
-                {
-                phn1=itm.value;
-                
-                }
-                
-                
-                
-                
-                
-                if(itm.attribute==mapping.attributes.REGNO) {
-                aregno=itm.value
-                }
-                if(itm.attribute==mapping.attributes.REGNO_OLD) {
-                    aregnoOld=itm.value
-                    }
-                
-               
-            
-                if(itm.attribute==mapping.attributes.BIRTHD)
-                {
-                mdates=itm.value;
-                var pyear=mdates.substring(0,4);
-                var pmonth=mdates.substring(5,7);
-                var pdate=mdates.substring(8,10);
-                bds=pyear+pmonth+pdate;
-            
-                }
-                if(itm.attribute==mapping.attributes.SEX)
-                {
-                genders=itm.value;
-                
-                }
-                
-                if(itm.attribute==mapping.attributes.IDENTITYCARD)
-                {
-                idnums=itm.value;
-                idnums=idnums;
-                }
-                if(itm.attribute==mapping.attributes.FIRSTN)
-                {
-                    
-                    lname=itm.value;
-                }
-            
-                if(itm.attribute==mapping.attributes.SURNAME)
-                {
-                    afname=itm.value;
-                }
-                if(itm.attribute==mapping.attributes.PHONEN2)
-                {
-                emails=itm.value;
-                }
-                if(itm.attribute==mapping.attributes.BIRTHD)
-                {
-                age=itm.value;
-                }
-            
-            })
-
-        //finalizing the declaration and map the values into one single variable so that it can be exported in a file
-        
-            var prss="0";
-            var tnnk="-1";
-            
-            var ifall="1";
-
-            if(aregno=="")
-            {
-                aregno=aregnoOld;
-            }
-            
-            
-            if ((!(aregno=="")) && (aregno.length == 8)) {
-                
-                var ocd="";
-                var obsplaq="0";
-                var patrecid=aregno+"01";
-                recby=recby;
-                var patrecstatus="0";
-                var checkstatus="0";
-
-                var datelast=new Date(datelst);
-                var dateinc=new Date(incdates);
-
-                var datediff=Math.floor((Math.abs(datelast-dateinc))/(1000*60*60*24));
-          if(datediff<0){
-                    //date 1 is newer
-                    datelastcontact="";
-                  
-                }
-                else{
-
-                   var pyear=datelst.substring(0,4);
-                        var pmonth=datelst.substring(5,7);
-                        var pdate=datelst.substring(8,10);
-                        datelastcontact=pyear+pmonth+pdate;   
-                }
-
-
-               /* if(datelast.getTime() <= dateinc.getTime()){
-                    //date 1 is newer
-                    datelastcontact="";
-                  
-                }
-                else{
-
-                   var pyear=datelst.substring(0,4);
-                        var pmonth=datelst.substring(5,7);
-                        var pdate=datelst.substring(8,10);
-                        datelastcontact=pyear+pmonth+pdate;   
-                }*/
-              
-                var fullstring=aregno+"\t"+prss+"\t"+idnums+"\t"+afname+"\t"+lname+"\t"+genders+"\t"+bds+"\t"+phn+"\t"+phn1+"\t"+nkin+"\t"+tnnk+ "\t"+natn+"\t"+datelastcontact+"\t"+stus+"\t"+ 
-                oncopr+"\t"+ifall+"\t"+progress+"\t"+csdeath+"\t"+placd+"\t"+ocd+"\t"+obsplaq+"\t"+patrecid+ "\t"+recby+"\t"+formatTodayDate()+"\t"+patrecstatus+"\t"+checkstatus+"\t"+remark; contacts=contacts+'\n'+fullstring;
-            }
-
-        });
-
-        
-        const element = document.createElement("a");
-        const file = new Blob([contacts], {type: 'text/plain;charset=utf-8'});
-        element.href = URL.createObjectURL(file);
-        element.download = "patient_data.txt";
-        document.body.appendChild(element); // Required for this to work in FireFox
-        element.click();
-
-        // Reset file dowload to false
+        downloadTsvFile(header, rows, 'patient_data.txt')
         setForFileDownload(false)
-
-        // Show paginated list again
-        refetch({ 
-            pageSize: 5
-        })
-
+        refetch({ pageSize: 5 })
     }
-
-    // A dynamic alert to communicate success or failure 
-    const { show } = useAlert(
-        ({ message }) => message,
-        ({ status }) => {
-            if (status === 'success') return { success: true }
-            else if (status === 'error') return { critical: true }
-            else return {}
-        } )
 
     const { loading, error, data, refetch } = useDataQuery(eventsQuery, {
-        variables: { page: 1, startDate: '2021-02-01', endDate: '2021-06-01', orgUnitID: rootOrgUnitId, pageSize: 5, ouMode: 'SELECTED', program: mapping.program },
+        variables: {
+            page: 1,
+            startDate: '2018-01-01',
+            endDate: new Date().toISOString().slice(0, 10),
+            orgUnitID: rootOrgUnitId,
+            pageSize: 5,
+            ouMode: 'SELECTED',
+            program: mapping.program,
+        },
     })
 
-    if (error) { return <span>ERROR: {error.message}</span> }
+    if (error) return <span>ERROR: {error.message}</span>
+    if (loading) return <CircularLoader />
 
-    if (loading) {
-        return (
-            <>
-                <CircularLoader />
-            </>
-        )
+    if (data?.results?.trackedEntities && forFileDownload) {
+        exportTSVFile(data.results.trackedEntities)
     }
 
-    if (data.results.trackedEntities) {  
-        if (forFileDownload) {
-            exportTSVFile(data.results.trackedEntities)
-        }
-    }
-
-    const updateDowloadInfo = (pageSize) =>{
+    const updateDownloadInfo = (pageSize) => {
         setForFileDownload(true)
-
-        refetch({ 
-            pageSize: pageSize
-        })
+        refetch({ pageSize })
     }
 
-    // Refetches and updates the patient data as long as the Filter button is clicked
     const updateFetchInfo = (startDate, endDate, orgUnitID, ouMode) => {
-        refetch({ 
-            startDate: startDate,
-            endDate: endDate,
-            orgUnitID: orgUnitID,
-            ouMode: ouMode 
-        })
-
+        refetch({ startDate, endDate, orgUnitID, ouMode })
         setForFileDownload(false)
     }
 
     return (
-
         <div className={classes.tableContainer}>
-          <div className='products'>
-            <AllRecordsHeaderView onUpdateFetchInfo={updateFetchInfo} provinces={provinces}/>
-            
-            <Table>
-                                <TableHead>
-                                    <TableRowHead>
-                                        <TableCellHead className={styles.leftcell}>
-                                            <div className={styles.row}>
-                                                <div className={styles.downloadfiles}>
-                                                <Button primary onClick={() => {updateDowloadInfo(data.results.pager.total)}}>{i18n.t('Download Patient Data')} </Button>
-              </div>
+            <div className="products">
+                <AllRecordsHeaderView
+                    onUpdateFetchInfo={updateFetchInfo}
+                />
 
-                                            </div>
-                                        </TableCellHead>
-                                    </TableRowHead>
-                                </TableHead>
-                            </Table>
+                {/* Download button */}
+                <Table>
+                    <TableHead>
+                        <TableRowHead>
+                            <TableCellHead className={styles.leftcell}>
+                                <div className={styles.row}>
+                                    <div className={styles.downloadfiles}>
+                                        <Button
+                                            primary
+                                            onClick={() =>
+                                                updateDownloadInfo(
+                                                    data.results.pager.total
+                                                )
+                                            }
+                                        >
+                                            {i18n.t('Download Patient Data')}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </TableCellHead>
+                        </TableRowHead>
+                    </TableHead>
+                </Table>
 
-            <Table>
-            <TableHead>
-                <TableRowHead>
-                <TableCellHead>First name</TableCellHead>
-                            <TableCellHead>Last name</TableCellHead>
-                            <TableCellHead>Phone Number</TableCellHead>
-                            <TableCellHead>DOB</TableCellHead>
-
-                            <TableCellHead>UID</TableCellHead>
-                            <TableCellHead>Other Phone</TableCellHead>
-                           
-
-                </TableRowHead>
-            </TableHead>
-            <TableBody>
-                {data.results.trackedEntities.map((item) => (
-            <TableRow>
+                <Table>
+                    <TableHead>
+                        <TableRowHead>
+                            <TableCellHead>{i18n.t('REGNO')}</TableCellHead>
+                            <TableCellHead>{i18n.t('First Name')}</TableCellHead>
+                            <TableCellHead>{i18n.t('Last Name')}</TableCellHead>
+                            <TableCellHead>{i18n.t('Date of Birth')}</TableCellHead>
+                        </TableRowHead>
+                    </TableHead>
+                    <TableBody>
+                        {(data?.results?.trackedEntities || []).map((tei, idx) => (
+                            <TableRow key={idx}>
                                 <TableCell>
-                                    {item.attributes.map((attr, index) => (
-                                        <p>
-                                            {attr.attribute == mapping.attributes.FIRSTN
-                                                ? attr.value
-                                                : ''}
-                                        </p>
-                                    ))}
+                                    {getAttrValue(tei.attributes, mapping.attributes?.REGNO)}
                                 </TableCell>
                                 <TableCell>
-                                    {item.attributes.map((attr, index) => (
-                                        <p>
-                                            {attr.attribute == mapping.attributes.SURNAME
-                                                ? attr.value
-                                                : ''}
-                                        </p>
-                                    ))}
+                                    {getAttrValue(tei.attributes, mapping.attributes?.FIRSTN)}
                                 </TableCell>
                                 <TableCell>
-                                    {item.attributes.map((attr, index) => (
-                                        <p>
-                                            {attr.attribute == mapping.attributes.PHONEN2
-                                                ? attr.value
-                                                : ''}
-                                        </p>
-                                    ))}
+                                    {getAttrValue(tei.attributes, mapping.attributes?.SURNAME)}
                                 </TableCell>
                                 <TableCell>
-                                    {item.attributes.map((attr, index) => (
-                                        <p>
-                                            {attr.attribute == mapping.attributes.BIRTHD
-                                                ? attr.value
-                                                : ''}
-                                        </p>
-                                    ))}
+                                    {getAttrValue(tei.attributes, mapping.attributes?.BIRTHD)}
                                 </TableCell>
-
-                                <TableCell>
-                                    {item.attributes.map((attr, index) => (
-                                        <p>
-                                            {attr.attribute == mapping.attributes.REGNO
-                                                ? attr.value
-                                                : ''}
-                                        </p>
-                                    ))}
-                                </TableCell>
-                                <TableCell>
-                                    {item.attributes.map((attr, index) => (
-                                        <p>
-                                            {attr.attribute == mapping.attributes.PHONEN2
-                                                ? attr.value
-                                                : ''}
-                                        </p>
-                                    ))}
-                                </TableCell>
-                               
                             </TableRow>
-
-                ))
-                }
-                </TableBody>
-            </Table>
-        </div>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
             <PaginationControls pager={data.results.pager} refetch={refetch} />
         </div>
     )

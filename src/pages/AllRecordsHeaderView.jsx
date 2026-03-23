@@ -1,227 +1,182 @@
-import { Button, InputField,Table, TableHead, TableCellHead, TableRowHead, Switch } from "@dhis2/ui";
+import { Button, InputField, OrganisationUnitTree, Layer, Popper, Card, Chip } from "@dhis2/ui";
 
-import { useDataQuery, useAlert } from '@dhis2/app-runtime'
-import React, { useState, useEffect }  from "react";
-import styles from './Form.module.css'
+import { useAlert } from '@dhis2/app-runtime'
+import React, { useState, useRef } from "react";
 import i18n from "../locales/index.js";
 import { useRootOrgUnitContext } from '../context/RootOrgUnitContext'
 
-import DatePicker from 'react-datepicker'
-import 'react-datepicker/dist/react-datepicker.css'
+export const AllRecordsHeaderView = ({onUpdateFetchInfo}) => {
 
-const orgUnitsQuery = {
-    results: {
-        resource: 'organisationUnits',
-        id: ({ orgUnitID }) => orgUnitID,
-        params:{
-            fields: ['children[name,id]']
-        },
-    },
-}
+  const { rootOrgUnitId } = useRootOrgUnitContext()
 
-export const AllRecordsHeaderView = ({onUpdateFetchInfo, provinces}) => {
-  
-  const { rootOrgUnitId, rootOrgUnitName } = useRootOrgUnitContext()
-  
-  // Component's states
-  const [orgUnitLevel, setOrgUnitLevel] = useState('')
-  const [districts, setDistricts] = useState([])
-  const [subdistricts, setSubdistricts] = useState([])
-  const [sectors, setSectors] = useState([])
-  const [facilities, setFacilities] = useState([])
-  const [orgUnitID, setOrgUnitID] = useState('')
+  const [selectedOrgUnits, setSelectedOrgUnits] = useState(new Map())
+  const [selectedPaths, setSelectedPaths] = useState([])
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
-  const [checkedOrg, setCheckedOrg] = useState(false)
-  
-  const { data, refetch } = useDataQuery(orgUnitsQuery, {
-    variables: { orgUnitID: rootOrgUnitId },
-    lazy: true,
-  })
-  
-  // A dynamic alert to communicate success or failure 
+  const [treeOpen, setTreeOpen] = useState(false)
+  const anchorRef = useRef(null)
+
   const { show } = useAlert(
     ({ message }) => message,
     ({ status }) => {
         if (status === 'success') return { success: true }
         else if (status === 'error') return { critical: true }
         else return {}
-    } )
-
-    const updateFilterInfoRw = () => {
-        onUpdateFetchInfo(startDate, endDate, rootOrgUnitId, 'DESCENDANTS')
     }
+  )
 
-  const updateFilterInfo = () => {
-    if (orgUnitID == '') {
-      show({ message:'You did not select any Health Facility', status: 'error' })    
-    }else if (startDate == '' || endDate == '') {
-      show({ message:'Make sure you select Start Date and End Date', status: 'error' })    
+  const handleOrgUnitChange = ({ id, path, displayName, checked }) => {
+    setSelectedOrgUnits((prev) => {
+      const next = new Map(prev)
+      if (checked) {
+        next.set(path, { id, displayName })
+      } else {
+        next.delete(path)
+      }
+      return next
+    })
+    setSelectedPaths((prev) =>
+      checked ? [...prev, path] : prev.filter((p) => p !== path)
+    )
+  }
+
+  const removeOrgUnit = (path) => {
+    setSelectedOrgUnits((prev) => {
+      const next = new Map(prev)
+      next.delete(path)
+      return next
+    })
+    setSelectedPaths((prev) => prev.filter((p) => p !== path))
+  }
+
+  const handleFetchData = () => {
+    if (selectedOrgUnits.size === 0) {
+      show({ message: i18n.t('Please select at least one organisation unit'), status: 'error' })
+    } else if (!startDate || !endDate) {
+      show({ message: i18n.t('Make sure you select Start Date and End Date'), status: 'error' })
     } else {
-      onUpdateFetchInfo(startDate, endDate, orgUnitID, 'SELECTED')
+      const orgUnitIds = [...selectedOrgUnits.values()].map((ou) => ou.id).join(',')
+      onUpdateFetchInfo(startDate, endDate, orgUnitIds, 'DESCENDANTS')
     }
   }
 
-  const onChange = (ev) => {  
-    setCheckedOrg(!checkedOrg)
-  }
+  const buttonLabel = selectedOrgUnits.size === 0
+    ? i18n.t('Select...')
+    : i18n.t('{{count}} selected', { count: selectedOrgUnits.size })
 
-  const updateOrgUnitLevel = (data) => {      
-      switch (orgUnitLevel) {
-        case 'Level-District':
-          setDistricts(data.results.children)
-          break;
-          case 'Level-SubDist':
-            setSubdistricts(data.results.children)
-            break;
-          case 'Level-Sector':
-            setSectors(data.results.children)
-            break;
-          case 'Level-Facility':
-            setFacilities(data.results.children)
-            break;    
-        default:
-          console.log("Got nothing...");
-          break;
-    }
-  }
-
-  // Updates the org unit levels when the query finishes fetching data.
-  useEffect(() => {
-    if (data) {
-      updateOrgUnitLevel(data)
-    }
-  }, [data])
-  
-  
   return (
-    <div className='products'>
-        <h1>{i18n.t('Data for Export')}</h1>
+    <div style={{ padding: '16px 0 8px' }}>
+        <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 500, color: '#212934' }}>
+          {i18n.t('Data for Export')}
+        </h2>
 
+        <div style={{
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: '12px',
+          flexWrap: 'wrap',
+          padding: '12px 16px',
+          background: '#f8f9fa',
+          borderRadius: '4px',
+          border: '1px solid #e8edf2',
+        }}>
 
-        <Table>
-          <TableHead>
-              <TableRowHead>
-                  <TableCellHead className={styles.leftcell}>
-                      <div className={styles.row}>
-                          <div className={styles.downloadfiles}>
-                          <div className={styles.leftmargin}>
-                          <InputField label="Start Date" type="date" required value={startDate} onChange={({ value }) => setStartDate(value)} />
-                          </div>
-                              <div className={styles.leftmarginsecond}>
-                                <InputField label="End Date" type="date" required value={endDate} onChange={({ value }) => setEndDate(value)} />
-                          </div>
-                          </div>
-                        </div>
-                    </TableCellHead>
-                </TableRowHead>
-            </TableHead>
-        </Table>
+          <div style={{ flex: '0 0 170px' }}>
+            <InputField
+              label={i18n.t("Start Date")}
+              type="date"
+              required
+              dense
+              value={startDate}
+              onChange={({ value }) => setStartDate(value)}
+            />
+          </div>
 
-        <Switch
-            checked={checkedOrg}
-            label={`Select ${rootOrgUnitName || 'All'}`}
-            name="rootOrgUnitSelector"
-            onChange={onChange}
-            value="checked"
-        />
+          <div style={{ flex: '0 0 170px' }}>
+            <InputField
+              label={i18n.t("End Date")}
+              type="date"
+              required
+              dense
+              value={endDate}
+              onChange={({ value }) => setEndDate(value)}
+            />
+          </div>
 
-          {checkedOrg?
-          <Table >
-            <TableHead>
-                <TableRowHead>
-                    <TableCellHead>
-                      <div className={styles.row}>
-                          <select className={styles.cbx} name="provselected">
-                              <option key={rootOrgUnitId} value={rootOrgUnitId}> {rootOrgUnitName} </option>
-                          </select>
-                      </div>
-                      </TableCellHead>
-                      <TableCellHead>
-                        <div >
-                        <Button primary onClick={updateFilterInfoRw}>Fetch Data </Button>
-                        </div>
-                      </TableCellHead>
-                    </TableRowHead>
-                </TableHead>
-            </Table>
-            :
-            <Table >
-            <TableHead>
-                <TableRowHead>
-                    <TableCellHead>
-                      <div className={styles.row}>
-                          <select className={styles.cbx} onChange={ (ev) => {
-                            setOrgUnitLevel('Level-District' )
-                            refetch({ orgUnitID: ev.target.value})
-                          }} name="provselected">
-                              <option value="0">Select Province...</option>
-                              {provinces && provinces.map( (orgUnit) => (
-                                 <option key={orgUnit.id} value={orgUnit.id}> { orgUnit.name } </option>
-                              ))}
-                          </select>
-                      </div>
-                      </TableCellHead>
-                      <TableCellHead>
-                        <div className={styles.row}>
-                            <select className={styles.cbx} onChange={(ev) => {
-                            setOrgUnitLevel('Level-SubDist')
-                            refetch({ orgUnitID: ev.target.value})
-                          }} name="provselected">
-                                <option value="0">Select District...</option>
-                                {districts && districts.map( (orgUnit) => (
-                                 <option key={orgUnit.id} value={orgUnit.id}> { orgUnit.name } </option>
-                              ))}
-                            </select>
-                        </div>
-                      </TableCellHead>
-                      <TableCellHead>
-                        <div className={styles.row}>
-                            <select className={styles.cbx} onChange={(ev) => {
-                            setOrgUnitLevel('Level-Sector' )
-                            refetch({ orgUnitID: ev.target.value})
-                          }} name="provselected">
-                                <option value="0">Select Sub-District...</option>
-                                {subdistricts && subdistricts.map( (orgUnit) => (
-                                 <option key={orgUnit.id} value={orgUnit.id}> { orgUnit.name } </option>
-                              ))}
-                            </select>
-                        </div>
-                      </TableCellHead>
-                      <TableCellHead>
-                        <div className={styles.row}>
-                            <select className={styles.cbx} onChange={(ev) => {
-                            setOrgUnitLevel('Level-Facility' )
-                            refetch({ orgUnitID: ev.target.value})
-                          }} name="provselected">
-                                <option value="0">Select Sector...</option>
-                                {sectors && sectors.map( (orgUnit) => (
-                                 <option key={orgUnit.id} value={orgUnit.id}> { orgUnit.name } </option>
-                              ))}
-                            </select>
-                        </div>
-                      </TableCellHead>
-                      <TableCellHead>
-                        <div className={styles.row}>
-                            <select className={styles.cbx} onChange={(ev) => setOrgUnitID(ev.target.value)} name="provselected">
-                                <option value="0">Select Facility...</option>
-                                {facilities && facilities.map( (orgUnit) => (
-                                 <option key={orgUnit.id} value={orgUnit.id}> { orgUnit.name } </option>
-                              ))}
-                            </select>
-                        </div>
-                      </TableCellHead>
+          <div style={{ flex: '0 0 auto', position: 'relative' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              color: '#212934',
+              marginBottom: '4px',
+              fontWeight: 400,
+            }}>
+              {i18n.t('Organisation units')}
+            </label>
+            <button
+              ref={anchorRef}
+              onClick={() => setTreeOpen(!treeOpen)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '6px 12px',
+                minWidth: '200px',
+                height: '34px',
+                border: '1px solid #a0adba',
+                borderRadius: '3px',
+                background: '#fff',
+                cursor: 'pointer',
+                fontSize: '14px',
+                color: selectedOrgUnits.size > 0 ? '#212934' : '#6e7a8a',
+                textAlign: 'left',
+              }}
+            >
+              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {buttonLabel}
+              </span>
+              <span style={{ fontSize: '10px', color: '#6e7a8a' }}>{treeOpen ? '▲' : '▼'}</span>
+            </button>
 
-                      <TableCellHead>
-                        <div className={styles.row}>
-                        <Button primary onClick={updateFilterInfo}>Fetch Data </Button>
-                        </div>
-                      </TableCellHead>
-                    </TableRowHead>
-                </TableHead>
-            </Table>
-            }
-          
+            {treeOpen && (
+              <Layer onClick={() => setTreeOpen(false)} transparent>
+                <Popper reference={anchorRef} placement="bottom-start">
+                  <Card>
+                    <div style={{
+                      padding: '8px',
+                      maxHeight: '300px',
+                      overflow: 'auto',
+                      minWidth: '280px',
+                    }}>
+                      <OrganisationUnitTree
+                        roots={rootOrgUnitId}
+                        selected={selectedPaths}
+                        onChange={handleOrgUnitChange}
+                        initiallyExpanded={[`/${rootOrgUnitId}`]}
+                      />
+                    </div>
+                  </Card>
+                </Popper>
+              </Layer>
+            )}
+          </div>
+
+          <div style={{ flex: '0 0 auto' }}>
+            <Button primary onClick={handleFetchData}>
+              {i18n.t('Fetch Data')}
+            </Button>
+          </div>
+        </div>
+
+        {selectedOrgUnits.size > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
+            {[...selectedOrgUnits.entries()].map(([path, { displayName }]) => (
+              <Chip key={path} onRemove={() => removeOrgUnit(path)}>
+                {displayName}
+              </Chip>
+            ))}
+          </div>
+        )}
     </div>
   )
 }

@@ -7,7 +7,7 @@ export const eventsQuery = {
             orgUnits: orgUnitID,
             orgUnitMode: ouMode,
             program: program,
-            fields: 'attributes[attribute,value],enrollments[trackedEntity,enrollment,events[storedBy,event,programStage,dataValues[dataElement,value]]]',
+            fields: 'updatedBy[username],attributes[attribute,value,valueType],enrollments[trackedEntity,enrollment,events[updatedBy[username],event,programStage,dataValues[dataElement,value,valueType]]]',
             enrollmentEnrolledAfter: startDate,
             enrollmentEnrolledBefore: endDate,
             totalPages: true,

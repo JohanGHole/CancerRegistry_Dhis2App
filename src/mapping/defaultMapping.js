@@ -1,97 +1,37 @@
 export const DEFAULT_MAPPING = {
-    program: 'rx6V962E4XM',
-
-    programStages: {
-        source: 'x0UOKjUKJsO',
-        tumour: 'Y0cWLBEdXzb',
-        followUp: 'yj7nAGqKXZw',
-    },
-
-    // Tracked Entity Attributes => CanReg5 patient-level fields
+    program: "AbPGPdlFWqc",
     attributes: {
-        REGNO: 'uWRHiEUPnP7',
-        REGNO_OLD: 'PTGSZmTk3IQ',
-        FIRSTN: 'mJ3oYSkDyWz',
-        SURNAME: 'Uda5alDG8P5',
-        SEX: 'l93yUywzP20',
-        BIRTHD: 'm1At2P4UT9e',
-        PHONE1: 'iUkIkQbkxI1',
-        PHONEN2: 'dd98c7o6RjZ',
-        NKNAME: 'YfjjdE6XOBu',
-        NATIONALITY: 'Yp8W95xlxMv',
-        IDENTITYCARD: 'LbuO5oeODsy',
+        SEX: "m7GEZG8cyCO",
+        FAMN: "nJsmdQXRoze",
+        REGNO: "hDEhIMZe07x",
+        BIRTHD: "NI0QRzJvQ0k"
     },
-
-    // Data Elements per program stage => CanReg5 export fields
     dataElements: {
-        followUp: {
-            STATUS: 'ya7NvvPZ6NE',
-            DLC: 'ZBgYdd6OKlc',
-            ONCOPR: 'TFmh28f4Ylz',
-            PROGRESSION: 'CiP6FnZEAr7',
-            CAUSEDEATH: 'amOhRQ0vBI7',
-            PLACED: 'CMycg9jCdw3',
-            REMARKS: 'OjKZjjByH9n',
-        },
-
-        tumour: {
-            HIVSTATUS: 'XBZsBO1iIMu',
-            DATEHIVTEST: 'w3hjoxhRdxX',
-            AGE: 'Lklmhjoa2VZ',
-            ADDR: 'YjyatbcXrAB',
-            SECTOR: 'R7C6qavR1By',
-            CELL: 'JoiKTef007f',
-            VILLAGE: 'hNjuN29oWEo',
-            INCID: 'qiPi86HJH9D',
-            BAS: 'b4nlCulDaNv',
-            TOP: 'mIGq36ORtj5',
-            BEH: 'R3V4FZ7bm1Z',
-            LATERALITY: 'pUcbnDZTKWO',
-            MOR: 'g4InB94akRh',
-            GRDE: 'MiCTO3OgRB8',
-            STAGE: 'lsyoWxLKpcg',
-            T: 'jufaPpTt33C',
-            N: 'crCh4AWyhEQ',
-            M: 'YU85aZgUvpI',
-            MPTOT: 'QsbsNHyRwcu',
-            PATIENTIDTUMOURTABLE: 'U6uTS5AuKQi',
-            INITIALT: 'QDYFCDo0kLm',
-            INTENTT: 'EJi6tdw5T1v',
-            SGRY: 'lb1iN94cSNn',
-            DATES: 'NzUoPBTcUme',
-            CHEMO: 'tmy8Js2OerA',
-            STARTC: 'dqLzVzpPBQk',
-            ENDCHEMO: 'qKApg9EbBvP',
-            IMMUNO: 'qhTmdhweTY6',
-            STARTI: 'UH0QjAVVpBw',
-            ENDIMMUNO: 'Os8vbHJ3qoc',
-            RADIO: 'simuoODFRUc',
-            STARTR: 'KuewOYQYRq7',
-            ENDRADIO: 'THtdWv46cXH',
-            HORMO: 'QKXwZ57aGdH',
-            STARTH: 'pazmxkluuAK',
-            ENDHORMO: 'ZTtTjPPKemm',
-            PALLIA: 'N6J5Bp9auN9',
-            DATEP: 'KWsp9YpTp8O',
-            OTHERT: 'YYW855k5GgW',
-            SPECIFYOT: 'tfeZgkgqJC9',
-        },
-
         source: {
-            SRC: 'WEMqZvXK07I',
-            SRVC: 'v9h8LhYlF2k',
-            SRCNO: 'gfyCp3UGFBg',
-            ARCHVC: 'g5PfzRwNHVy',
-            ADMNDATE: 'alUwzyO4ksp',
-            DISDATE: 'Ntf8uwbttrj',
-            LABO: 'cVDk6Qi4aXJ',
-            LABNO: 'm9zPgjtU6Ck',
-            BIOPSYNO: 'K90OuFCv3c8',
-            RECEPTNDATE: 'iUev3OfIqOg',
-            REPRTDATE: 'kNjR9xQM4Wv',
-            FROM: 'sLGqIdIjg20',
-            TO: 'yvXtJYq4f5A',
-            INTENTREF: 'BD4nYiPXwLN',
+            SOUD: "TgjO873BZTu",
+            SOUT: "Mqz5dPrwWho",
+            TUMOURIDSOURCETABLE: "HxMFZcIIZpL"
         },
+        tumour: {
+            AGE: "tasm9QG8HaF",
+            BAS: "uoyoNWrexbY",
+            BEH: "MMIuwJdjx8B",
+            MOR: "UkyyY1xukJg",
+            TOP: "zw6Vwqnhvmh",
+            ADDR: "xcUBzN5QFXu",
+            GRDE: "ZMD8dwB3zOZ",
+            INCID: "c6EnHSAMUat",
+            TUMOURID: "KwMs1DNVA0R"
+        },
+        followUp: {
+            DLC: "Ks2WWWWCuzq",
+            STAT: "nMpcjKFF5zt",
+            DATEDEATH: "hCJqPZcw2n6"
+        }
     },
+    programStages: {
+        source: "jPXHxYeFooQ",
+        tumour: "S12EbFtuFoI",
+        followUp: "eBsqDQj341X"
+    }
 }

@@ -1,360 +1,161 @@
-import { useDataQuery, useAlert } from '@dhis2/app-runtime'
-import { Button, CircularLoader, InputField, Table, TableBody, TableCell, TableCellHead, TableHead, TableRow, TableRowHead } from "@dhis2/ui";
-
-import { AllRecordsHeaderView } from './AllRecordsHeaderView.jsx'
+import { useDataQuery } from '@dhis2/app-runtime'
+import {
+    Button, CircularLoader, Table, TableBody, TableCell,
+    TableCellHead, TableHead, TableRow, TableRowHead,
+} from '@dhis2/ui'
 import React, { useState } from 'react'
 
+import { AllRecordsHeaderView } from './AllRecordsHeaderView.jsx'
 import { PaginationControls } from './SourceComponents/PaginationControls.jsx'
 import * as classes from '../App.module.css'
-import i18n from "../locales/index.js";
+import i18n from '../locales/index.js'
 import styles from './Form.module.css'
+
+import {
+    getAttrValue,
+    collectStageEvents,
+    extractEventData,
+    formatValuesForTsv,
+    downloadTsvFile,
+} from '../app_utils/App_Utils'
 import { useRootOrgUnitContext } from '../context/RootOrgUnitContext'
 import { useMappingContext } from '../mapping/MappingContext'
 import { eventsQuery } from '../queries/eventsQuery'
 
+const REGNO_LENGTH = 8
+
+const DERIVED_COLUMNS = [
+    { name: 'SOURCERECORDID', value: ({ eventData, sourceIndex }) => {
+        const tumourId = eventData?.TUMOURIDSOURCETABLE?.value || ''
+        return tumourId ? `${tumourId}${String(sourceIndex).padStart(2, '0')}` : ''
+    }},
+]
+
 export const Source = () => {
-    const { rootOrgUnitId, rootOrgUnitChildren: provinces } = useRootOrgUnitContext()
+    const { rootOrgUnitId } = useRootOrgUnitContext()
     const { mapping } = useMappingContext()
     const [forFileDownload, setForFileDownload] = useState(false)
 
-    const formatPatientID = (oldID) => {
-        var newID
-        if (oldID.length == 9) { 
-            newID = oldID.substring(0, 4) + oldID.substring(5);
-        } else if  (oldID.length == 14) { 
-            newID = oldID.substring(4, 8) + oldID.substring(10);
-        }else {
-            newID = oldID
-        }
-        return newID;
-    }
+    const exportTSVFile = (trackedEntities) => {
+        const sourceKeys = Object.keys(mapping.dataElements?.source || {})
+        const sourceDefs = mapping.dataElements?.source || {}
+        const derivedNames = DERIVED_COLUMNS.map((d) => d.name)
+        const header = [...derivedNames, ...sourceKeys].join('\t')
 
-    const exportTSVFile = (trackedEntityInstances) =>{
-  
-        var contacts = "TUMOURIDSOURCETABLE"+"\t"+"SOURCERECORDID"+"\t"+"SRC"+"\t"
-        +"SRVC"+"\t"+"SRCNO"+"\t"+"ARCHVC"+"\t"+"ADMNDATE"+"\t"+"DATESC"+"\t"+"DISDATE"+"\t"+"LABO"+"\t"+"LABNO"+"\t"+"BIOPSYNO"+"\t"+"RECEPTNDATE"+"\t"+"REPRTDATE"+"\t"+"FROM"+"\t"+"SRCDATE"+"\t"+"TO"+"\t"+"INTENTREF";
+        const rows = []
 
-        //variable declaration...
-        let tumourid_src_table="", source_record_id="", tumor_src="", source_service="", patient_hospital_number="", archive_code="", date_of_admition="", date_of_discharge="", date_of_adm="", source_labo="", labnun="", Biopsy_Number="", Date_of_reception="", Date_of_Report="", Referred_from="", srcdate="", Referred_to="", Referred_for="", aregno="";
-        // end of global variable declaration...
-        let temp_sourceid_src_table="";
+        for (const tei of trackedEntities) {
+            const regno = getAttrValue(tei.attributes, mapping.attributes?.REGNO)
+            if (!regno) continue
+            if (REGNO_LENGTH > 0 && regno.length !== REGNO_LENGTH) continue
 
+            const sourceEvents = collectStageEvents(tei.enrollments, mapping.programStages?.source)
 
-//mapping datas in file to download
+            for (let i = 0; i < sourceEvents.length; i++) {
+                const event = sourceEvents[i]
+                const eventData = extractEventData(event, sourceDefs)
 
-trackedEntityInstances.map((tei) => {
-    let uniqueId = ''
-    let aregnoOld = ''
-    let sourceCounts = 0
-    let sourceEvents = []
-    tei.attributes.map((item) => {
-        if (item.attribute == mapping.attributes.REGNO) {
-            uniqueId = item.value
-        }
-        if(item.attribute==mapping.attributes.REGNO_OLD) {
-            aregnoOld=item.value
+                const ctx = { regno, sourceIndex: i + 1, eventData }
+                const derivedValues = DERIVED_COLUMNS.map((d) => d.value(ctx))
+                const sourceValues = formatValuesForTsv(sourceKeys, eventData)
+
+                rows.push([...derivedValues, ...sourceValues].join('\t'))
             }
-    })
-    
-    // Getting the number of Tumour  stage events present in the current enrollment
-    tei.enrollments.map((enrollment) => {
-        enrollment.events.map((teiEvent) => {
-            if(teiEvent.programStage==mapping.programStages.source){
-                sourceCounts ++
-                sourceEvents.push(teiEvent)
-            } 
-        })
-    })
-    
-    for (let i = 0; i < sourceEvents.length; i++) {
-        let teiEvent = sourceEvents[i]
-        if(uniqueId=='')
-        {
-            uniqueId=aregnoOld;   
-        }
-       
-                    aregno = uniqueId+"0101"; 
-                    source_record_id=aregno+"0"+(i+1);
-                    tumourid_src_table=aregno;
-
-                    tumor_src ="";source_service ="";patient_hospital_number ="";archive_code ="";date_of_admition="";
-                    date_of_discharge="";source_labo="";labnun=""; Biopsy_Number="";Date_of_reception="";
-                     Date_of_Report="";Referred_from="";Referred_to="";Referred_for="";
-        
-        // Filling the rest of the tumor table fields
-        teiEvent.dataValues.map((dataValue) =>{
-          
-            if(dataValue.dataElement == mapping.dataElements.source.SRC) { 
-                tumor_src = dataValue.value }
-            if(dataValue.dataElement == mapping.dataElements.source.SRVC) { source_service = dataValue.value }
-            if(dataValue.dataElement == mapping.dataElements.source.SRCNO) { patient_hospital_number = dataValue.value }
-            if(dataValue.dataElement == mapping.dataElements.source.ARCHVC) { archive_code = dataValue.value }
-            if(dataValue.dataElement==mapping.dataElements.source.ADMNDATE)
-            {
-                //console.log(dtvalues.value);
-                var dats=dataValue.value;
-
-                var pyear=dats.substring(0,4);
-                var pmonth=dats.substring(5,7);
-                var pdate=dats.substring(8,10);
-                date_of_admition=pyear+pmonth+pdate;
-
-            }
-            if(dataValue.dataElement==mapping.dataElements.source.DISDATE)
-            {
-                //console.log(dtvalues.value);
-                var dats=dataValue.value;
-
-                var pyear=dats.substring(0,4);
-                var pmonth=dats.substring(5,7);
-                var pdate=dats.substring(8,10);
-                date_of_discharge=pyear+pmonth+pdate;
-
-            }
-
-
-
-
-            if(dataValue.dataElement==mapping.dataElements.source.LABO)
-            {
-                //console.log(dtvalues.value);
-                source_labo=dataValue.value;
-            }
-            if(dataValue.dataElement==mapping.dataElements.source.LABNO)
-            {
-                //console.log(dtvalues.value);
-                labnun=dataValue.value;
-            }
-            if(dataValue.dataElement==mapping.dataElements.source.BIOPSYNO)
-            {
-                //console.log(dtvalues.value);
-                Biopsy_Number=dataValue.value;
-            }
-            if(dataValue.dataElement==mapping.dataElements.source.RECEPTNDATE)
-            {
-                //console.log(dtvalues.value);
-                var dats=dataValue.value;
-
-                var pyear=dats.substring(0,4);
-                var pmonth=dats.substring(5,7);
-                var pdate=dats.substring(8,10);
-                Date_of_reception=pyear+pmonth+pdate;
-
-            }
-            if(dataValue.dataElement==mapping.dataElements.source.REPRTDATE)
-            {
-                //console.log(dtvalues.value);
-                var dats=dataValue.value;
-
-                var pyear=dats.substring(0,4);
-                var pmonth=dats.substring(5,7);
-                var pdate=dats.substring(8,10);
-                Date_of_Report=pyear+pmonth+pdate;
-
-            }
-            
-            if(dataValue.dataElement==mapping.dataElements.source.FROM)
-            {
-                //console.log(dtvalues.value);
-                Referred_from=dataValue.value;
-            }
-            if(dataValue.dataElement==mapping.dataElements.source.TO)
-            {
-                //console.log(dtvalues.value);
-                Referred_to=dataValue.value;
-            }
-            if(dataValue.dataElement==mapping.dataElements.source.INTENTREF)
-            {
-                //console.log(dtvalues.value);
-                Referred_for=dataValue.value;
-            }
-      
-    
-        });
-
-        
-        var fullstring=tumourid_src_table+"\t"+source_record_id+"\t"+tumor_src+"\t"+source_service+"\t"+patient_hospital_number+"\t"+archive_code+
-        "\t"+date_of_admition+"\t"+date_of_adm+"\t"+date_of_discharge+"\t"+source_labo+"\t"+labnun+"\t"+Biopsy_Number+
-        "\t"+Date_of_reception+"\t"+Date_of_Report+"\t"+Referred_from+"\t"+srcdate+"\t"+Referred_to+"\t"+Referred_for;
-                
-        
-        if(tumourid_src_table.length == 12){
-            contacts=contacts+'\n'+fullstring;
         }
 
-    }
-});
-
-
-    const element = document.createElement("a");
-    const file = new Blob([contacts], {type: 'text/plain;charset=utf-8'});
-    element.href = URL.createObjectURL(file);
-    element.download = "source_data.txt";
-    document.body.appendChild(element); // Required for this to work in FireFox
-    element.click();
-
-
-        // Reset file dowload to false
+        downloadTsvFile(header, rows, 'source_data.txt')
         setForFileDownload(false)
-
-        // Show paginated list again
-        refetch({ 
-            pageSize: 5
-        })
-        
-
+        refetch({ pageSize: 5 })
     }
-
-    // A dynamic alert to communicate success or failure 
-    const { show } = useAlert(
-        ({ message }) => message,
-        ({ status }) => {
-            if (status === 'success') return { success: true }
-            else if (status === 'error') return { critical: true }
-            else return {}
-        } )
 
     const { loading, error, data, refetch } = useDataQuery(eventsQuery, {
-        variables: { page: 1, startDate: '2021-02-01', endDate: '2021-06-01', orgUnitID: rootOrgUnitId, pageSize: 5, ouMode: 'SELECTED' },
+        variables: {
+            page: 1,
+            startDate: '2018-01-01',
+            endDate: new Date().toISOString().slice(0, 10),
+            orgUnitID: rootOrgUnitId,
+            pageSize: 5,
+            ouMode: 'SELECTED',
+            program: mapping.program,
+        },
     })
 
-    if (error) { return <span>ERROR: {error.message}</span> }
+    if (error) return <span>ERROR: {error.message}</span>
+    if (loading) return <CircularLoader />
 
-    if (loading) {
-        return (
-            <>
-                <CircularLoader />
-            </>
-        )
+    if (data?.results?.trackedEntities && forFileDownload) {
+        exportTSVFile(data.results.trackedEntities)
     }
 
-    if (data.results.trackedEntities) {  
-        if (forFileDownload) {
-            exportTSVFile(data.results.trackedEntities)
-        }
-    }
-
-    const updateDowloadInfo = (pageSize) =>{
+    const updateDownloadInfo = (pageSize) => {
         setForFileDownload(true)
-
-        refetch({ 
-            pageSize: pageSize
-        })
+        refetch({ pageSize })
     }
 
-    // Refetches and updates the tumour data as long as the Filter button is clicked
     const updateFetchInfo = (startDate, endDate, orgUnitID, ouMode) => {
-        refetch({ 
-            startDate: startDate,
-            endDate: endDate,
-            orgUnitID: orgUnitID,
-            ouMode: ouMode 
-        })
-
+        refetch({ startDate, endDate, orgUnitID, ouMode })
         setForFileDownload(false)
     }
 
     return (
-
         <div className={classes.tableContainer}>
-          <div className='products'>
-            <AllRecordsHeaderView onUpdateFetchInfo={updateFetchInfo} provinces={provinces}/>
-            
-            
-            <Table>
-                                <TableHead>
-                                    <TableRowHead>
-                                        <TableCellHead className={styles.leftcell}>
-                                            <div className={styles.row}>
-                                                <div className={styles.downloadfiles}>
-                                             
-             
-                                                <Button primary onClick={() => {updateDowloadInfo(data.results.pager.total)}}>{i18n.t('Download Source Data')} </Button>
-              </div>
-                                            </div>
-                                        </TableCellHead>
-                                    </TableRowHead>
-                                </TableHead>
-                            </Table>
-            <Table>
-            <TableHead>
-                <TableRowHead>
-                <TableCellHead>First name</TableCellHead>
-                            <TableCellHead>Last name</TableCellHead>
-                            <TableCellHead>Phone Number</TableCellHead>
-                            <TableCellHead>DOB</TableCellHead>
+            <div className="products">
+                <AllRecordsHeaderView
+                    onUpdateFetchInfo={updateFetchInfo}
+                />
 
-                            <TableCellHead>UID</TableCellHead>
-                            <TableCellHead>Other Phone</TableCellHead>
-                            <TableCellHead>Status</TableCellHead>
-                </TableRowHead>
-            </TableHead>
-            <TableBody>
-                {data.results.trackedEntities.map((item) => (
+                <Table>
+                    <TableHead>
+                        <TableRowHead>
+                            <TableCellHead className={styles.leftcell}>
+                                <div className={styles.row}>
+                                    <div className={styles.downloadfiles}>
+                                        <Button
+                                            primary
+                                            onClick={() =>
+                                                updateDownloadInfo(
+                                                    data.results.pager.total
+                                                )
+                                            }
+                                        >
+                                            {i18n.t('Download Source Data')}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </TableCellHead>
+                        </TableRowHead>
+                    </TableHead>
+                </Table>
 
-            <TableRow>
+                <Table>
+                    <TableHead>
+                        <TableRowHead>
+                            <TableCellHead>{i18n.t('REGNO')}</TableCellHead>
+                            <TableCellHead>{i18n.t('First Name')}</TableCellHead>
+                            <TableCellHead>{i18n.t('Last Name')}</TableCellHead>
+                            <TableCellHead>{i18n.t('Date of Birth')}</TableCellHead>
+                        </TableRowHead>
+                    </TableHead>
+                    <TableBody>
+                        {(data?.results?.trackedEntities || []).map((tei, idx) => (
+                            <TableRow key={idx}>
                                 <TableCell>
-                                    {item.attributes.map((attr, index) => (
-                                        <p>
-                                            {attr.attribute == mapping.attributes.FIRSTN
-                                                ? attr.value
-                                                : ''}
-                                        </p>
-                                    ))}
+                                    {getAttrValue(tei.attributes, mapping.attributes?.REGNO)}
                                 </TableCell>
                                 <TableCell>
-                                    {item.attributes.map((attr, index) => (
-                                        <p>
-                                            {attr.attribute == mapping.attributes.SURNAME
-                                                ? attr.value
-                                                : ''}
-                                        </p>
-                                    ))}
+                                    {getAttrValue(tei.attributes, mapping.attributes?.FIRSTN)}
                                 </TableCell>
                                 <TableCell>
-                                    {item.attributes.map((attr, index) => (
-                                        <p>
-                                            {attr.attribute == mapping.attributes.PHONEN2
-                                                ? attr.value
-                                                : ''}
-                                        </p>
-                                    ))}
+                                    {getAttrValue(tei.attributes, mapping.attributes?.SURNAME)}
                                 </TableCell>
                                 <TableCell>
-                                    {item.attributes.map((attr, index) => (
-                                        <p>
-                                            {attr.attribute == mapping.attributes.BIRTHD
-                                                ? attr.value
-                                                : ''}
-                                        </p>
-                                    ))}
+                                    {getAttrValue(tei.attributes, mapping.attributes?.BIRTHD)}
                                 </TableCell>
-
-                                <TableCell>
-                                    {item.attributes.map((attr, index) => (
-                                        <p>
-                                            {attr.attribute == mapping.attributes.REGNO
-                                                ? attr.value
-                                                : ''}
-                                        </p>
-                                    ))}
-                                </TableCell>
-                                <TableCell>
-                                    {item.attributes.map((attr, index) => (
-                                        <p>
-                                            {attr.attribute == mapping.attributes.PHONEN2
-                                                ? attr.value
-                                                : ''}
-                                        </p>
-                                    ))}
-                                </TableCell>
-                                <TableCell>Incomplete</TableCell>
                             </TableRow>
-                ))
-                }
-                </TableBody>
-            </Table>
-        </div>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
             <PaginationControls pager={data.results.pager} refetch={refetch} />
         </div>
     )

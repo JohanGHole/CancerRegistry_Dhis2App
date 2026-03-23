@@ -1,33 +1,65 @@
-# Cancer-Registry App
+# Cancer Registry DHIS2 App
 
-![Cancer Registry Logo](https://github.com/hisprwanda/CancerRegistry_Dhis2App/blob/main/public/CancerRegistryApp_logo.png)
+A DHIS2 web application that exports patient, tumour, and source data from a DHIS2 Cancer Registry Tracker program into CanReg5-compatible TSV files. Built with the [DHIS2 Application Platform](https://github.com/dhis2/app-platform).
 
-## 1. Introduction
+This app was originally developed by [HISP Rwanda](https://hisprwanda.org) to fit the Rwanda cancer registry use-case. The core [DHIS2](https://dhis2.org) team has since reworked the app to make the mapping customizable, so it can be reused by any country or implementation without changes to the app code.
 
-This is a DHIS2 Web application that was bootstrapped with [DHIS2 Application Platform](https://github.com/dhis2/app-platform).
-The goal of this project was to create a web application that will help data managers at any District Hospital in Rwanda to retrieve data related to their cancer patients and format, filter and put the data in a Tab-Separated file that will later be imported in CanReg5.
+## How it works
 
-### 1.1 What is CanReg5?
+The app has four export tabs: Patient, Tumour, Source, and All Records, each producing a `.tsv` file that can be imported into CanReg5.
 
-"CanReg5 is an open source tool to input, store, check and analyse cancer registry data.
+Which fields end up as columns in the export is  controlled by a mapping table stored in the [DHIS2 data store](https://docs.dhis2.org/en/develop/using-the-api/dhis-core-version-master/data-store.html) (namespace `cancerRegistryApp`, key `fieldMapping`). Each key in the mapping corresponds to a CanReg5 variable name (= column in the export), and the value is the DHIS2 attribute or data element UID.
 
-It has modules to do data entry, quality control, consistency checks and basic analysis of the data. The main improvements from the previous version are the new database engine, the improved multi user capacities and that the development is managed as an open source project.
+On first launch the app seeds the DataStore with a default mapping (see [defaultMapping](/src/mapping/defaultMapping.js)). After that, changes are made directly in the data store, which means that no code changes are needed.
 
-Also included is a tool to facilitate the set up of a new or modification of an existing database by adding new variables, tailoring the data entry forms etc." _[International Association for Cancer Registries](http://www.iacr.com.fr/index.php?option=com_content&view=article&id=9:canreg5&catid=68&Itemid=445)_
+## Configuration
 
-### 1.2. App Users
+### Mapping structure
 
-Because CanReg5 is not accessible to the internet. The App will be used by the people at the national level where the man Cancer Registry database and the production CanReg5 application are hosted.
+The app expects a tracker program that follows the cancer registry metadata structure: a program with source, tumour, and follow-up stages, along with a set of tracked entity attributes for patient-level data. The mapping ties each of these to their DHIS2 UIDs.
 
-## 2. Development Team
+The app comes preconfigured with the mapping for the [DHIS2 Cancer Registry Toolkit](https://dhis2.org/iarc-hisp-centre-cancer-registries/) metadata package. If your instance uses this package, the default mapping should work out of the box. For custom setups, update the UIDs accordingly.
 
-The application has been developed by [HISP Rwanda](hisprwanda.org) with guidance from [DHIS2](dhis2.org)'s core development team.
+### How to add or change fields
+![DataStore mapping](public/datastore-mapping.png)
 
-## 3. Running the Application
+1. Open the DataStore Manager app in your DHIS2 instance.
+2. Navigate to `cancerRegistryApp` and `fieldMapping`.
+3. Add, remove, or update entries in the JSON.
+4. Save. The app picks up changes on the next page load.
 
-This application can be installed in any **DHIS2** instance which has oncology program.
+### Example: adding a phone number to the patient export
 
-For debugging below are the scripts you can use to run the app in your local environment.
+Say you have configured a tracked entity attribute in DHIS2 for the patient's phone number. To include it in the CanReg5 export, add a `PHONE1` entry (corresponding to the canreg5 data element name for phone number) to the `attributes` section of the mapping:
+
+```diff
+ "attributes": {
+     "REGNO":   "hDEhIMZe07x",
+     "SEX":     "m7GEZG8cyCO",
+     "BIRTHD":  "NI0QRzJvQ0k",
+     "FAMN": "nJsmdQXRoze",
++    "PHONE1":  "<UID_PHONE_ATTRIBUTE>"
+ }
+```
+
+After saving, the patient export will include a `PHONE1` column with the corresponding attribute value. The same approach works for the `dataElements` sections: Add a key/value pair under `source`, `tumour`, or `followUp` to include additional data element columns.
+
+> The mapping keys must match valid CanReg5 variable names, and the UIDs must point to existing DHIS2 metadata.
+
+## Derived columns
+
+The app also generates a few derived columns at export time. These are not part of the mapping, they are computed automatically.
+
+| Column | Export | Description |
+|--------|--------|-------------|
+| `PATIENTRECORDID` | Patient, All Records | `REGNO` + `"01"`, the patient record identifier expected by CanReg5 |
+| `PATIENTUPDATEDBY` | Patient, All Records | DHIS2 username that last updated the patient record |
+| `TUMOURUPDATEDBY` | Tumour, All Records | DHIS2 username that last updated the tumour event |
+| `SOURCERECORDID` | Source, All Records | `TUMOURIDSOURCETABLE` + two-digit source index (`01`, `02`, …) |
+
+## Running the application
+
+This application can be installed on any DHIS2 instance that has the DHIS2 cancer registry program configured.
 
 In the project directory, you can run:
 
@@ -63,7 +95,7 @@ You must run `yarn build` before running `yarn deploy`.<br />
 
 See the section about [deploying](https://platform.dhis2.nu/#/scripts/deploy) for more information.
 
-## Learn More
+## Learn more
 
 You can learn more about the platform in the [DHIS2 Application Platform Documentation](https://platform.dhis2.nu/).
 
@@ -71,9 +103,12 @@ You can learn more about the runtime in the [DHIS2 Application Runtime Documenta
 
 To learn React, check out the [React documentation](https://reactjs.org/).
 
-## 4. Points of Contacts
+## Credits
 
-| Names                |       Title        |                       Email |                       Github |
-| -------------------- | :----------------: | --------------------------: | --------------------------: |
-| Maurice Jules Mulisa | Software Developer |     mauricej@hisprwanda.org |     [mauricejulesm](https://github.com/mauricejulesm) |
-| Pascal Ndayizigiye   | Software Developer | pndayizigiye@hisprwanda.org | pndayizigiye |
+Originally developed by [HISP Rwanda](https://hisprwanda.org). Configuration externalized by the [DHIS2](https://dhis2.org) core team.
+
+| Name | Role | Contact |
+|------|------|---------|
+| Maurice Jules Mulisa | Developer (HISP Rwanda) | [mauricejulesm](https://github.com/mauricejulesm) |
+| Pascal Ndayizigiye | Developer (HISP Rwanda) | pndayizigiye@hisprwanda.org |
+| Johan Hole | Developer (DHIS2 Extensibility Team) | [johanghole](https://github.com/johanghole) |

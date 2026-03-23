@@ -5,8 +5,8 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"POT-Creation-Date: 2026-02-09T12:00:07.281Z\n"
-"PO-Revision-Date: 2026-02-09T12:00:07.281Z\n"
+"POT-Creation-Date: 2026-03-20T13:50:21.254Z\n"
+"PO-Revision-Date: 2026-03-20T13:50:21.255Z\n"
 
 msgid "Home"
 msgstr "Home"
@@ -29,8 +29,46 @@ msgstr "Reports"
 msgid "Download Oncology Data"
 msgstr "Download Oncology Data"
 
+msgid "REGNO"
+msgstr "REGNO"
+
+msgid "First Name"
+msgstr "First Name"
+
+msgid "Last Name"
+msgstr "Last Name"
+
+msgid "Date of Birth"
+msgstr "Date of Birth"
+
+msgid "Please select at least one organisation unit"
+msgstr "Please select at least one organisation unit"
+
+msgid "Make sure you select Start Date and End Date"
+msgstr "Make sure you select Start Date and End Date"
+
+msgid "Select..."
+msgstr "Select..."
+
+msgid "{{count}} selected"
+msgid_plural "{{count}} selected"
+msgstr[0] "{{count}} selected"
+msgstr[1] "{{count}} selected"
+
 msgid "Data for Export"
 msgstr "Data for Export"
+
+msgid "Start Date"
+msgstr "Start Date"
+
+msgid "End Date"
+msgstr "End Date"
+
+msgid "Organisation units"
+msgstr "Organisation units"
+
+msgid "Fetch Data"
+msgstr "Fetch Data"
 
 msgid "Home page"
 msgstr "Home page"
