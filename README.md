@@ -1,6 +1,6 @@
 # Cancer Registry DHIS2 App
 
-A DHIS2 web application that exports patient, tumour, and source data from a DHIS2 Cancer Registry Tracker program into CanReg5-compatible TSV files. Built with the [DHIS2 Application Platform](https://github.com/dhis2/app-platform).
+A DHIS2 web application that exports patient, tumour, and source data from a [DHIS2 Cancer Registry Tracker program](https://docs.dhis2.org/en/implement/health/non-communicable-diseases/cancer-registry/overview.html) into CanReg5-compatible TSV files. Built with the [DHIS2 Application Platform](https://github.com/dhis2/app-platform).
 
 This app was originally developed by [HISP Rwanda](https://hisprwanda.org) to fit the Rwanda cancer registry use-case. The core [DHIS2](https://dhis2.org) team has since reworked the app to make the mapping customizable, so it can be reused by any country or implementation without changes to the app code.
 
@@ -18,7 +18,7 @@ On first launch the app seeds the DataStore with a default mapping (see [default
 
 The app expects a tracker program that follows the cancer registry metadata structure: a program with source, tumour, and follow-up stages, along with a set of tracked entity attributes for patient-level data. The mapping ties each of these to their DHIS2 UIDs.
 
-The app comes preconfigured with the mapping for the [DHIS2 Cancer Registry Toolkit](https://dhis2.org/iarc-hisp-centre-cancer-registries/) metadata package. If your instance uses this package, the default mapping should work out of the box. For custom setups, update the UIDs accordingly.
+The app comes preconfigured with the mapping for the [DHIS2 Cancer Registry Toolkit](https://docs.dhis2.org/en/implement/health/non-communicable-diseases/cancer-registry/overview.html) metadata package. If your instance uses this package, the default mapping should work out of the box. For custom setups, update the UIDs accordingly.
 
 ### How to add or change fields
 ![DataStore mapping](public/datastore-mapping.png)
