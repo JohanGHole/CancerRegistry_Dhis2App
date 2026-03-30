@@ -1,4 +1,4 @@
-# Cancer Registry DHIS2 App
+# Cancer Registry Export App
 
 A DHIS2 web application that exports patient, tumour, and source data from a [DHIS2 Cancer Registry Tracker program](https://docs.dhis2.org/en/implement/health/non-communicable-diseases/cancer-registry/overview.html) into CanReg5-compatible TSV files. Built with the [DHIS2 Application Platform](https://github.com/dhis2/app-platform).
 
