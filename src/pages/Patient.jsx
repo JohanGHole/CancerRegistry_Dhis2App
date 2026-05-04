@@ -1,13 +1,13 @@
-import { useDataQuery } from '@dhis2/app-runtime'
 import {
     Button, CircularLoader, Table, TableBody, TableCell,
     TableCellHead, TableHead, TableRow, TableRowHead,
 } from '@dhis2/ui'
-import React, { useState } from 'react'
+import React from 'react'
 
 import { AllRecordsHeaderView } from './AllRecordsHeaderView.jsx'
 import { PaginationControls } from './TumourComponents/PaginationControls.jsx'
 import * as classes from '../App.module.css'
+import { ConfigurationErrorNotice } from '../components/ConfigurationErrorNotice'
 import i18n from '../locales/index.js'
 import styles from './Form.module.css'
 
@@ -17,98 +17,63 @@ import {
     getAttr,
     getAttrValue,
     extractFollowUpData,
-    downloadTsvFile,
 } from '../app_utils/App_Utils'
-import { useRootOrgUnitContext } from '../context/RootOrgUnitContext'
-import { useMappingContext } from '../mapping/MappingContext'
-import { eventsQuery } from '../queries/eventsQuery'
-const REGNO_LENGTH = 8
+import { useTrackedEntityExport } from '../hooks/useTrackedEntityExport.jsx'
 
 const DERIVED_COLUMNS = [
-    { name: 'PATIENTRECORDID',      value: ({ regno }) => regno ? `${regno}01` : '' },
-    { name: 'PATIENTUPDATEDBY',     value: ({ storedBy })  => storedBy },
+    { name: 'PATIENTRECORDID',  value: ({ regno }) => regno ? `${regno}01` : '' },
+    { name: 'PATIENTUPDATEDBY', value: ({ storedBy }) => storedBy },
 ]
 
-export const Patient = () => {
-    const { rootOrgUnitId } = useRootOrgUnitContext()
-    const { mapping } = useMappingContext()
-    const [forFileDownload, setForFileDownload] = useState(false)
+const buildHeader = (mapping) => {
+    const attrKeys = Object.keys(mapping.attributes || {})
+    const followUpKeys = Object.keys(mapping.dataElements?.followUp || {})
+    const derivedNames = DERIVED_COLUMNS.map((d) => d.name)
+    return [...attrKeys, ...followUpKeys, ...derivedNames].join('\t')
+}
 
-    const exportTSVFile = (trackedEntities) => {
+const buildRowsForTei = ({ tei, regno, mapping }) => {
+    const attrKeys = Object.keys(mapping.attributes || {})
+    const followUpKeys = Object.keys(mapping.dataElements?.followUp || {})
 
-        const attrKeys = Object.keys(mapping.attributes || {})
-        const followUpKeys = Object.keys(mapping.dataElements?.followUp || {})
-        const derivedNames = DERIVED_COLUMNS.map((d) => d.name)
-
-        const header = [...attrKeys, ...followUpKeys, ...derivedNames].join('\t')
-
-        const rows = []
-
-        for (const tei of trackedEntities) {
-            const regno = getAttrValue(tei.attributes, mapping.attributes?.REGNO)
-            if (!regno) continue
-            if (REGNO_LENGTH > 0 && regno.length !== REGNO_LENGTH) continue
-
-            const attrValues = attrKeys.map((key) => {
-                const { value, valueType } = getAttr(tei.attributes, mapping.attributes[key])
-                return shouldFormatAsDate(valueType, value) ? formatCanRegDate(value) : value
-            })
-
-            const { followUpValues, storedBy: followUpStoredBy } = extractFollowUpData(
-                tei.enrollments, mapping
-            )
-            const fuValues = followUpKeys.map((key) => {
-                const { value, valueType } = followUpValues[key] || {}
-                return shouldFormatAsDate(valueType, value || '') ? formatCanRegDate(value || '') : (value || '')
-            })
-
-            const patientUpdatedBy = followUpStoredBy || tei.updatedBy?.username || ''
-            const ctx = { regno, storedBy: patientUpdatedBy }
-            const derivedValues = DERIVED_COLUMNS.map((d) => d.value(ctx))
-
-            rows.push([...attrValues, ...fuValues, ...derivedValues].join('\t'))
-        }
-
-        downloadTsvFile(header, rows, 'patient_data.txt')
-        setForFileDownload(false)
-        refetch({ pageSize: 5 })
-    }
-
-    const { loading, error, data, refetch } = useDataQuery(eventsQuery, {
-        variables: {
-            page: 1,
-            startDate: '2018-01-01',
-            endDate: new Date().toISOString().slice(0, 10),
-            orgUnitID: rootOrgUnitId,
-            pageSize: 5,
-            ouMode: 'SELECTED',
-            program: mapping.program,
-        },
+    const attrValues = attrKeys.map((key) => {
+        const { value, valueType } = getAttr(tei.attributes, mapping.attributes[key])
+        return shouldFormatAsDate(valueType, value) ? formatCanRegDate(value) : value
     })
 
-    if (error) return <span>ERROR: {error.message}</span>
+    const { followUpValues, storedBy: followUpStoredBy } = extractFollowUpData(
+        tei.enrollments, mapping
+    )
+    const fuValues = followUpKeys.map((key) => {
+        const { value, valueType } = followUpValues[key] || {}
+        return shouldFormatAsDate(valueType, value || '')
+            ? formatCanRegDate(value || '')
+            : (value || '')
+    })
+
+    const patientUpdatedBy = followUpStoredBy || tei.updatedBy?.username || ''
+    const ctx = { regno, storedBy: patientUpdatedBy }
+    const derivedValues = DERIVED_COLUMNS.map((d) => d.value(ctx))
+
+    return [[...attrValues, ...fuValues, ...derivedValues].join('\t')]
+}
+
+export const Patient = () => {
+    const {
+        loading, error, data, refetch, mapping, triggerDownload, updateFetchInfo,
+    } = useTrackedEntityExport({
+        filename: 'patient_data.txt',
+        buildHeader,
+        buildRowsForTei,
+    })
+
+    if (error) return <ConfigurationErrorNotice error={error} />
     if (loading) return <CircularLoader />
-
-    if (data?.results?.trackedEntities && forFileDownload) {
-        exportTSVFile(data.results.trackedEntities)
-    }
-
-    const updateDownloadInfo = (pageSize) => {
-        setForFileDownload(true)
-        refetch({ pageSize })
-    }
-
-    const updateFetchInfo = (startDate, endDate, orgUnitID, ouMode) => {
-        refetch({ startDate, endDate, orgUnitID, ouMode })
-        setForFileDownload(false)
-    }
 
     return (
         <div className={classes.tableContainer}>
             <div className="products">
-                <AllRecordsHeaderView
-                    onUpdateFetchInfo={updateFetchInfo}
-                />
+                <AllRecordsHeaderView onUpdateFetchInfo={updateFetchInfo} />
 
                 {/* Download button */}
                 <Table>
@@ -119,11 +84,7 @@ export const Patient = () => {
                                     <div className={styles.downloadfiles}>
                                         <Button
                                             primary
-                                            onClick={() =>
-                                                updateDownloadInfo(
-                                                    data.results.pager.total
-                                                )
-                                            }
+                                            onClick={() => triggerDownload(data.results.pager.total)}
                                         >
                                             {i18n.t('Download Patient Data')}
                                         </Button>

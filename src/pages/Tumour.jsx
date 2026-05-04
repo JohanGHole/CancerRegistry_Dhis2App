@@ -1,13 +1,13 @@
-import { useDataQuery } from '@dhis2/app-runtime'
 import {
     Button, CircularLoader, Table, TableBody, TableCell,
     TableCellHead, TableHead, TableRow, TableRowHead,
 } from '@dhis2/ui'
-import React, { useState } from 'react'
+import React from 'react'
 
 import { AllRecordsHeaderView } from './AllRecordsHeaderView.jsx'
 import { PaginationControls } from './TumourComponents/PaginationControls.jsx'
 import * as classes from '../App.module.css'
+import { ConfigurationErrorNotice } from '../components/ConfigurationErrorNotice'
 import i18n from '../locales/index.js'
 import styles from './Form.module.css'
 
@@ -16,89 +16,55 @@ import {
     collectStageEvents,
     extractEventData,
     formatValuesForTsv,
-    downloadTsvFile,
     TOPOGRAPHY_KEYS,
 } from '../app_utils/App_Utils'
-import { useRootOrgUnitContext } from '../context/RootOrgUnitContext'
-import { useMappingContext } from '../mapping/MappingContext'
-import { eventsQuery } from '../queries/eventsQuery'
-
-const REGNO_LENGTH = 8
+import { useTrackedEntityExport } from '../hooks/useTrackedEntityExport.jsx'
 
 const DERIVED_COLUMNS = [
     { name: 'TUMOURUPDATEDBY', value: ({ updatedBy }) => updatedBy },
 ]
 
-export const Tumour = () => {
-    const { rootOrgUnitId } = useRootOrgUnitContext()
-    const { mapping } = useMappingContext()
-    const [forFileDownload, setForFileDownload] = useState(false)
+const buildHeader = (mapping) => {
+    const tumourKeys = Object.keys(mapping.dataElements?.tumour || {})
+    const derivedNames = DERIVED_COLUMNS.map((d) => d.name)
+    return [...tumourKeys, ...derivedNames].join('\t')
+}
 
-    const exportTSVFile = (trackedEntities) => {
-        const tumourKeys = Object.keys(mapping.dataElements?.tumour || {})
-        const tumourDefs = mapping.dataElements?.tumour || {}
-        const derivedNames = DERIVED_COLUMNS.map((d) => d.name)
-        const header = [...tumourKeys, ...derivedNames].join('\t')
+const buildRowsForTei = ({ tei, regno, mapping }) => {
+    const tumourKeys = Object.keys(mapping.dataElements?.tumour || {})
+    const tumourDefs = mapping.dataElements?.tumour || {}
+    const tumourEvents = collectStageEvents(tei.enrollments, mapping.programStages?.tumour)
 
-        const rows = []
+    const rows = []
+    for (let i = 0; i < tumourEvents.length; i++) {
+        const event = tumourEvents[i]
+        const eventData = extractEventData(event, tumourDefs)
+        const tumourValues = formatValuesForTsv(tumourKeys, eventData, TOPOGRAPHY_KEYS)
 
-        for (const tei of trackedEntities) {
-            const regno = getAttrValue(tei.attributes, mapping.attributes?.REGNO)
-            if (!regno) continue
-            if (REGNO_LENGTH > 0 && regno.length !== REGNO_LENGTH) continue
-
-            const tumourEvents = collectStageEvents(tei.enrollments, mapping.programStages?.tumour)
-
-            for (let i = 0; i < tumourEvents.length; i++) {
-                const event = tumourEvents[i]
-                const eventData = extractEventData(event, tumourDefs)
-                const tumourValues = formatValuesForTsv(tumourKeys, eventData, TOPOGRAPHY_KEYS)
-
-                const ctx = {
-                    regno,
-                    tumourIndex: i + 1,
-                    tumourTotal: tumourEvents.length,
-                    updatedBy: event.updatedBy?.username || '',
-                }
-                const derivedValues = DERIVED_COLUMNS.map((d) => d.value(ctx))
-
-                rows.push([...tumourValues, ...derivedValues].join('\t'))
-            }
+        const ctx = {
+            regno,
+            tumourIndex: i + 1,
+            tumourTotal: tumourEvents.length,
+            updatedBy: event.updatedBy?.username || '',
         }
+        const derivedValues = DERIVED_COLUMNS.map((d) => d.value(ctx))
 
-        downloadTsvFile(header, rows, 'tumour_data.txt')
-        setForFileDownload(false)
-        refetch({ pageSize: 5 })
+        rows.push([...tumourValues, ...derivedValues].join('\t'))
     }
+    return rows
+}
 
-    const { loading, error, data, refetch } = useDataQuery(eventsQuery, {
-        variables: {
-            page: 1,
-            startDate: '2018-01-01',
-            endDate: new Date().toISOString().slice(0, 10),
-            orgUnitID: rootOrgUnitId,
-            pageSize: 5,
-            ouMode: 'SELECTED',
-            program: mapping.program,
-        },
+export const Tumour = () => {
+    const {
+        loading, error, data, refetch, mapping, triggerDownload, updateFetchInfo,
+    } = useTrackedEntityExport({
+        filename: 'tumour_data.txt',
+        buildHeader,
+        buildRowsForTei,
     })
 
-    if (error) return <span>ERROR: {error.message}</span>
+    if (error) return <ConfigurationErrorNotice error={error} />
     if (loading) return <CircularLoader />
-
-    if (data?.results?.trackedEntities && forFileDownload) {
-        exportTSVFile(data.results.trackedEntities)
-    }
-
-    const updateDownloadInfo = (pageSize) => {
-        setForFileDownload(true)
-        refetch({ pageSize })
-    }
-
-    const updateFetchInfo = (startDate, endDate, orgUnitID, ouMode) => {
-        refetch({ startDate, endDate, orgUnitID, ouMode })
-        setForFileDownload(false)
-    }
 
     const tumourKeys = Object.keys(mapping.dataElements?.tumour || {})
     const previewKeys = tumourKeys.slice(0, 5)
@@ -112,9 +78,7 @@ export const Tumour = () => {
     return (
         <div className={classes.tableContainer}>
             <div className="products">
-                <AllRecordsHeaderView
-                    onUpdateFetchInfo={updateFetchInfo}
-                />
+                <AllRecordsHeaderView onUpdateFetchInfo={updateFetchInfo} />
 
                 {/* Download button */}
                 <Table>
@@ -125,11 +89,7 @@ export const Tumour = () => {
                                     <div className={styles.downloadfiles}>
                                         <Button
                                             primary
-                                            onClick={() =>
-                                                updateDownloadInfo(
-                                                    data.results.pager.total
-                                                )
-                                            }
+                                            onClick={() => triggerDownload(data.results.pager.total)}
                                         >
                                             {i18n.t('Download Tumour Data')}
                                         </Button>
