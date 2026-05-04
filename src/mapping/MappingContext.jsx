@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef } from 'react'
 import { useDataQuery, useDataMutation } from '@dhis2/app-runtime'
-import { CircularLoader } from '@dhis2/ui'
+import { CircularLoader, NoticeBox } from '@dhis2/ui'
+import i18n from '../locales/index.js'
 
 import { mappingQuery, createMappingMutation } from './dataStoreApi'
 import { DEFAULT_MAPPING } from './defaultMapping'
@@ -25,7 +26,18 @@ export const MappingProvider = ({ children }) => {
         return <CircularLoader />
     }
     if (error && !is404) {
-        return <span>Failed to load field mapping: {error.message}</span>
+        return (
+            <NoticeBox error title={i18n.t('Configuration error')}>
+                <p>
+                    {i18n.t(
+                        'Failed to load the field mapping from the Data Store. Please ensure the Data Store namespace "cancerRegistryApp" with key "fieldMapping" exists and is accessible.'
+                    )}
+                </p>
+                <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#666' }}>
+                    {i18n.t('Server response')}: {error.message}
+                </p>
+            </NoticeBox>
+        )
     }
 
     const mapping = is404 || !data?.mapping ? DEFAULT_MAPPING : data.mapping
