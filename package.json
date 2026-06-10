@@ -12,7 +12,7 @@
     "lint": "d2-style js check && d2-style text check"
   },
   "devDependencies": {
-    "@dhis2/cli-app-scripts": "^12.10.4",
+    "@dhis2/cli-app-scripts": "^12.11.1",
     "@dhis2/cli-style": "^7.3.0"
   },
   "dependencies": {
